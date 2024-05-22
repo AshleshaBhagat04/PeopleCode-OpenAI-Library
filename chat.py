@@ -32,8 +32,8 @@ def generate_prompt(context):
     return prompt
 
 
-def generate_followups(question, answer):
-    convo_history = f"User: {question}\nAssistant: {answer}\n"
+def generate_followups(question, response):
+    convo_history = f"User: {question}\nAssistant: {response}\n"
     followups = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -42,8 +42,8 @@ def generate_followups(question, answer):
             {"role": "user", "content": convo_history}
         ]
     )
-    questions = followups['choices'][0]['message']['content'].strip().split('\n')
-    return questions
+    followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
+    return followup_qs
 
 
 print("How can I help you today?")
