@@ -30,26 +30,4 @@ while True:
 
     print("Response:\n" + answer)
 
-    followup_questions = generate_followups(latest_question, latest_answer)
-
-    if followup_questions:
-        print("Follow-up Questions:")
-        for idx, questions in enumerate(followup_questions):
-            print(f"{questions}")
-        choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ")
-        try:
-            choice_idx = int(choice) - 1
-            if choice_idx == -1:
-                continue
-            elif 0 <= choice_idx < len(followup_questions):
-                user_prompt = followup_questions[choice_idx]
-                chat_response = ask_question(user_prompt, system_prompt)
-                answer = chat_response['choices'][0]['message']['content'].strip()
-                convo_dict[user_prompt] = answer
-                latest_question = user_prompt
-                latest_answer = answer
-                print("Response:\n" + answer)
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Invalid input.")
+    latest_question, latest_answer = handle_followups(convo_dict, latest_question, latest_answer, system_prompt)
