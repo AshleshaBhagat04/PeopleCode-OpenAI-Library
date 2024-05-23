@@ -1,9 +1,13 @@
 import openai
 
+settings = {
+    "model": "gpt-3.5-turbo"
+}
+
 
 def ask_question(question, instructions):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model=settings["model"],
         messages=[
             {"role": "system", "content": instructions},
             {"role": "user", "content": question}
@@ -14,7 +18,7 @@ def ask_question(question, instructions):
 
 def generate_prompt(context):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model=settings["model"],
         messages=[
             {"role": "system",
              "content": "Generate a prompt based on the context provided below."},
@@ -28,7 +32,7 @@ def generate_prompt(context):
 def generate_followups(question, response):
     convo_history = f"User: {question}\nAssistant: {response}\n"
     followups = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model=settings["model"],
         messages=[
             {"role": "system",
              "content": "Generate 3 follow-up questions that the user could choose to ask based on the conversation history provided below."},
