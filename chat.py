@@ -1,50 +1,11 @@
-import openai
 import sys
+from chatfunctions import *
 
 openai.api_key = 'sk-proj-C41dhuNFgtqVNy7WwiIIT3BlbkFJrSlVU2qLpLWjIvUyaahA'
 
 convo_dict = {}
-recent_question = ""
-recent_answer = ""
-
-
-def ask_question(question, instructions):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": instructions},
-            {"role": "user", "content": question}
-        ]
-    )
-    return response
-
-
-def generate_prompt(context):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system",
-             "content": "Generate a prompt based on the context provided below."},
-            {"role": "user", "content": context}
-        ]
-    )
-    prompt = response['choices'][0]['message']['content'].strip()
-    return prompt
-
-
-def generate_followups(question, response):
-    convo_history = f"User: {question}\nAssistant: {response}\n"
-    followups = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system",
-             "content": "Generate 3 follow-up questions that the user could choose to ask based on the conversation history provided below."},
-            {"role": "user", "content": convo_history}
-        ]
-    )
-    followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
-    return followup_qs
-
+latest_question = ""
+latest_answer = ""
 
 print("How can I help you today?")
 while True:
@@ -64,12 +25,12 @@ while True:
     chat_response = ask_question(user_prompt, system_prompt)
     answer = chat_response['choices'][0]['message']['content'].strip()
     convo_dict[user_prompt] = answer
-    recent_question = user_prompt
-    recent_answer = answer
+    latest_question = user_prompt
+    latest_answer = answer
 
     print("Response:\n" + answer)
 
-    followup_questions = generate_followups(recent_question, recent_answer)
+    followup_questions = generate_followups(latest_question, latest_answer)
 
     if followup_questions:
         print("Follow-up Questions:")
@@ -85,8 +46,8 @@ while True:
                 chat_response = ask_question(user_prompt, system_prompt)
                 answer = chat_response['choices'][0]['message']['content'].strip()
                 convo_dict[user_prompt] = answer
-                recent_question = user_prompt
-                recent_answer = answer
+                latest_question = user_prompt
+                latest_answer = answer
                 print("Response:\n" + answer)
             else:
                 print("Invalid choice.")
