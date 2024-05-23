@@ -1,7 +1,12 @@
 import sys
+import os
 from chatfunctions import *
 
-openai.api_key = 'sk-proj-C41dhuNFgtqVNy7WwiIIT3BlbkFJrSlVU2qLpLWjIvUyaahA'
+api_key = os.getenv('OPENAI_API_KEY')
+
+if not api_key:
+    print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
+    sys.exit(-1)
 
 convo_dict = {}
 latest_question = ""
