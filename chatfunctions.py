@@ -1,11 +1,7 @@
 import openai
 
-settings = {
-    "model": "gpt-3.5-turbo"
-}
 
-
-def ask_question(question, instructions):
+def ask_question(question, instructions, settings):
     response = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
@@ -16,7 +12,7 @@ def ask_question(question, instructions):
     return response
 
 
-def generate_prompt(context, max_words):
+def generate_prompt(context, max_words, settings):
     response = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
@@ -29,7 +25,7 @@ def generate_prompt(context, max_words):
     return prompt
 
 
-def generate_followups(question, response, num_samples, max_words):
+def generate_followups(question, response, num_samples, max_words, settings):
     convo_history = f"User: {question}\nAssistant: {response}\n"
     followups = openai.ChatCompletion.create(
         model=settings["model"],
@@ -43,8 +39,8 @@ def generate_followups(question, response, num_samples, max_words):
     return followup_qs
 
 
-def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, num_samples, max_words):
-    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words)
+def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, num_samples, max_words, settings):
+    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words, settings)
 
     if followup_questions:
         print("Follow-up Questions:")
@@ -57,7 +53,7 @@ def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, 
                 return latest_question, latest_answer
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
-                chat_response = ask_question(user_prompt, system_prompt)
+                chat_response = ask_question(user_prompt, system_prompt, settings)
                 answer = chat_response['choices'][0]['message']['content'].strip()
                 convo_dict[user_prompt] = answer
                 latest_question = user_prompt
