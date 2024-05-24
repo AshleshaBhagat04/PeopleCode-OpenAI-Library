@@ -16,12 +16,12 @@ def ask_question(question, instructions):
     return response
 
 
-def generate_prompt(context):
+def generate_prompt(context, max_words):
     response = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": "Generate a prompt based on the context provided below."},
+             "content": f"Generate a prompt based on the context provided below in no more than {max_words} words."},
             {"role": "user", "content": context}
         ]
     )
@@ -29,13 +29,13 @@ def generate_prompt(context):
     return prompt
 
 
-def generate_followups(question, response):
+def generate_followups(question, response, num_samples, max_words):
     convo_history = f"User: {question}\nAssistant: {response}\n"
     followups = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": "Generate 3 follow-up questions that the user could choose to ask based on the conversation history provided below."},
+             "content": f"Generate {num_samples} follow-up questions that the user could choose to ask based on the conversation history provided below. Each follow-up question should be no more than {max_words} words."},
             {"role": "user", "content": convo_history}
         ]
     )
@@ -43,8 +43,8 @@ def generate_followups(question, response):
     return followup_qs
 
 
-def handle_followups(convo_dict, latest_question, latest_answer, system_prompt):
-    followup_questions = generate_followups(latest_question, latest_answer)
+def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, num_samples, max_words):
+    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words)
 
     if followup_questions:
         print("Follow-up Questions:")
