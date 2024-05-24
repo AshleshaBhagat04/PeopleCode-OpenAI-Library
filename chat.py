@@ -1,60 +1,87 @@
 import sys
 import os
-from chatfunctions import *
+from chatfunctions import ask_question, generate_prompt, handle_followups
 
-api_key = os.getenv('OPENAI_API_KEY')
 
-if not api_key:
-    print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
-    sys.exit(-1)
-
-convo_dict = {}
-latest_question = ""
-latest_answer = ""
-
-model_options = ["gpt-3.5-turbo", "gpt-4"]
-print("Available models:")
-for idx, model in enumerate(model_options, start=1):
-    print(f"{idx}. {model}")
-model_choice = input("Select the model to use: ").strip()
-
-try:
-    model_idx = int(model_choice) - 1
-    if 0 <= model_idx < len(model_options):
-        selected_model = model_options[model_idx]
-    else:
-        print("Invalid choice. Using default model.")
-        selected_model = model_options[0]
-except ValueError:
-    print("Invalid input. Using default model.")
-    selected_model = model_options[0]
-
-settings = {"model": selected_model}
-
-print("How can I help you today?")
-while True:
-    user_prompt = input("Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ")
-    system_prompt = ""
-    num_samples = int(input("Enter the number of follow-up questions to generate: "))
-    max_words = int(input("Enter the maximum number of words for questions and prompts: "))
-
-    if user_prompt.strip().lower() == "exit":
+def main():
+    # Get API key from environment variables
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         sys.exit(-1)
-    elif user_prompt.strip().lower() == "generate":
-        prompt_context = input("Enter the context for generating a prompt: ")
-        user_prompt = generate_prompt(prompt_context, max_words, settings)
-        print("Generated prompt: " + user_prompt)
-    else:
-        system_prompt = input("Enter a system prompt or press enter to use default: ")
-        if not system_prompt.strip():
-            system_prompt = "You are a very helpful assistant."
 
-    chat_response = ask_question(user_prompt, system_prompt, settings)
-    answer = chat_response['choices'][0]['message']['content'].strip()
-    convo_dict[user_prompt] = answer
-    latest_question = user_prompt
-    latest_answer = answer
+    # Define available models
+    model_options = ["gpt-3.5-turbo", "gpt-4"]
+    print("Available models:")
+    for idx, model in enumerate(model_options, start=1):
+        print(f"{idx}. {model}")
 
-    print("Response:\n" + answer)
+    # Select model with default
+    selected_model = model_options[0]
+    try:
+        model_choice = int(input("Select the model to use: ").strip())
+        if 1 <= model_choice <= len(model_options):
+            selected_model = model_options[model_choice - 1]
+        else:
+            print("Invalid choice. Using default model.")
+    except ValueError:
+        print("Invalid input. Using default model.")
 
-    latest_question, latest_answer = handle_followups(convo_dict, latest_question, latest_answer, system_prompt, num_samples, max_words, settings)
+    settings = {"model": selected_model}
+
+    # Conversation history
+    convo_dict = {}
+    latest_question = ""
+    latest_answer = ""
+
+    print("How can I help you today?")
+    while True:
+        user_prompt = input(
+            "Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ").strip().lower()
+        # Initialize system prompt
+        system_prompt = ""
+
+        # Handle user input
+        if user_prompt == "exit":
+            print("Goodbye!")
+            sys.exit(0)
+        elif user_prompt == "generate":
+            # Generate a new prompt
+            prompt_context = input("Enter the context for generating a prompt: ").strip()
+            try:
+                max_words = int(input("Enter the maximum number of words for the generated prompt: ").strip())
+                user_prompt = generate_prompt(prompt_context, max_words, settings)
+                print("Generated prompt: " + user_prompt)
+            except ValueError:
+                print("Invalid input for maximum number of words. Please enter a valid integer.")
+                continue
+        else:
+            # Get system prompt or use default
+            system_prompt = input("Enter a system prompt or press enter to use default: ").strip()
+            if not system_prompt:
+                system_prompt = "You are a very helpful assistant."
+
+        try:
+            # Get the number of follow-up questions and maximum words
+            num_samples = int(input("Enter the number of follow-up questions to generate: ").strip())
+            max_words = int(input("Enter the maximum number of words for questions and prompts: ").strip())
+        except ValueError:
+            print("Invalid input. Please enter valid integers for the number of follow-up questions and maximum words.")
+            continue
+
+        # Get response from the model
+        chat_response = ask_question(user_prompt, system_prompt, settings)
+        answer = chat_response['choices'][0]['message']['content'].strip()
+        convo_dict[user_prompt] = answer
+        latest_question = user_prompt
+        latest_answer = answer
+
+        print("Response:\n" + answer)
+
+        # Handle follow-up questions
+        latest_question, latest_answer = handle_followups(convo_dict, latest_question, latest_answer, system_prompt,
+                                                          num_samples, max_words, settings)
+
+
+if __name__ == "__main__":
+    main()
