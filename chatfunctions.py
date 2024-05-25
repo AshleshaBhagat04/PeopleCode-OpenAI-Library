@@ -1,31 +1,34 @@
 import openai
 
 
-def ask_question(question, instructions, settings):
+def ask_question(conversation, question, instructions, settings):
     """
-    Asks a question to the OpenAI Chat API.
+    Asks a question to the OpenAI Chat API
 
     Args:
+        conversation (list): The conversation history.
         question (str): The question to ask.
         instructions (str): Instructions or system prompt for the chat.
         settings (dict): The model to use.
 
     Returns:
-        dict: The response from the OpenAI Chat API.
+        dict: The response from the OpenAI Chat API,
     """
+    conversation.append({"role": "user", "content": question})
     response = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
-            {"role": "system", "content": instructions},
-            {"role": "user", "content": question}
-        ]
+                     {"role": "system", "content": instructions}
+                 ] + conversation
     )
-    return response
+    answer = response['choices'][0]['message']['content'].strip()
+    conversation.append({"role": "assistant", "content": answer})
+    return {"reply": answer, "conversation": conversation}
 
 
 def generate_prompt(context, max_words, settings):
     """
-    Generates a prompt based on the provided context.
+    Generates a prompt based on the context.
 
     Args:
         context (str): The context for generating the prompt.
@@ -33,7 +36,7 @@ def generate_prompt(context, max_words, settings):
         settings (dict): The model to use.
 
     Returns:
-        str: The prompt based on the context.
+        str: The prompt.
     """
     response = openai.ChatCompletion.create(
         model=settings["model"],
@@ -47,11 +50,12 @@ def generate_prompt(context, max_words, settings):
     return prompt
 
 
-def generate_followups(question, response, num_samples, max_words, settings):
+def generate_followups(conversation, question, response, num_samples, max_words, settings):
     """
-    Generates follow-up questions based on a question, response, and conversation history.
+    Generates follow-up questions.
 
     Args:
+        conversation (list): The conversation history.
         question (str): The previous question asked.
         response (str): The response to the previous question.
         num_samples (int): Number of follow-up questions to generate.
@@ -61,25 +65,29 @@ def generate_followups(question, response, num_samples, max_words, settings):
     Returns:
         list: A list of follow-up questions.
     """
-    convo_history = f"User: {question}\nAssistant: {response}\n"
+    convo_history = conversation + [
+        {"role": "user", "content": question},
+        {"role": "assistant", "content": response}
+    ]
     followups = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
             {"role": "system",
              "content": f"Generate {num_samples} follow-up questions that the user could choose to ask based on the conversation history provided below. Each follow-up question should be no more than {max_words} words."},
-            {"role": "user", "content": convo_history}
+            {"role": "user",
+             "content": "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in convo_history])}
         ]
     )
     followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
     return followup_qs
 
 
-def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, num_samples, max_words, settings):
+def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words, settings):
     """
     Handles the process of presenting and selecting follow-up questions.
 
     Args:
-        convo_dict (dict): Dictionary to store conversation history.
+        conversation (list): The conversation history.
         latest_question (str): The latest question asked.
         latest_answer (str): The response to the latest question.
         system_prompt (str): The system prompt.
@@ -88,30 +96,29 @@ def handle_followups(convo_dict, latest_question, latest_answer, system_prompt, 
         settings (dict): The model to use.
 
     Returns:
-        tuple: A tuple with the updated latest question and response.
+        tuple: A tuple with the updated latest question and response, and the conversation history.
     """
-    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words, settings)
+    followup_questions = generate_followups(conversation, latest_question, latest_answer, num_samples, max_words,
+                                            settings)
 
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions):
-            print(f"{question}")
-        choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ")
+            print(f"{idx + 1}. {question}")
+        choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
             choice_idx = int(choice) - 1
             if choice_idx == -1:
-                return latest_question, latest_answer
+                return latest_question, latest_answer, conversation
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
-                chat_response = ask_question(user_prompt, system_prompt, settings)
-                answer = chat_response['choices'][0]['message']['content'].strip()
-                convo_dict[user_prompt] = answer
+                response = ask_question(conversation, user_prompt, system_prompt, settings)
                 latest_question = user_prompt
-                latest_answer = answer
-                print("Response:\n" + answer)
-                return latest_question, latest_answer
+                latest_answer = response['reply']
+                print("Response:\n" + latest_answer)
+                return latest_question, latest_answer, response['conversation']
             else:
                 print("Invalid choice.")
         except ValueError:
             print("Invalid input.")
-    return latest_question, latest_answer
+    return latest_question, latest_answer, conversation

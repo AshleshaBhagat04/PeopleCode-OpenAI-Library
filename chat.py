@@ -30,7 +30,7 @@ def main():
     settings = {"model": selected_model}
 
     # Conversation history
-    convo_dict = {}
+    conversation = []
     latest_question = ""
     latest_answer = ""
 
@@ -38,8 +38,6 @@ def main():
     while True:
         user_prompt = input(
             "Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ").strip().lower()
-        # Initialize system prompt
-        system_prompt = ""
 
         # Handle user input
         if user_prompt == "exit":
@@ -49,38 +47,38 @@ def main():
             # Generate a new prompt
             prompt_context = input("Enter the context for generating a prompt: ").strip()
             try:
-                max_words = int(input("Enter the maximum number of words for the generated prompt: ").strip())
+                max_words = 25
+                max_words = int(input("Enter the maximum number of words for the generated prompt or press enter to use default: ").strip())
                 user_prompt = generate_prompt(prompt_context, max_words, settings)
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Invalid input for maximum number of words. Please enter a valid integer.")
-                continue
-        else:
-            # Get system prompt or use default
-            system_prompt = input("Enter a system prompt or press enter to use default: ").strip()
-            if not system_prompt:
-                system_prompt = "You are a very helpful assistant."
 
+        # Get system prompt or use default
+        system_prompt = input("Enter a system prompt or press enter to use default: ").strip()
+        if not system_prompt:
+            system_prompt = "You are a very helpful assistant."
+        num_samples = 3
+        max_words = 25
         try:
             # Get the number of follow-up questions and maximum words
-            num_samples = int(input("Enter the number of follow-up questions to generate: ").strip())
-            max_words = int(input("Enter the maximum number of words for questions and prompts: ").strip())
+            num_samples = int(input("Enter the number of follow-up questions to generate or press enter to use default: ").strip())
+            max_words = int(input("Enter the maximum number of words for questions and prompts or press enter to use default: ").strip())
         except ValueError:
             print("Invalid input. Please enter valid integers for the number of follow-up questions and maximum words.")
-            continue
 
         # Get response from the model
-        chat_response = ask_question(user_prompt, system_prompt, settings)
-        answer = chat_response['choices'][0]['message']['content'].strip()
-        convo_dict[user_prompt] = answer
+        response = ask_question(conversation, user_prompt, system_prompt, settings)
+        answer = response['reply']
+        conversation = response['conversation']
         latest_question = user_prompt
         latest_answer = answer
 
         print("Response:\n" + answer)
 
         # Handle follow-up questions
-        latest_question, latest_answer = handle_followups(convo_dict, latest_question, latest_answer, system_prompt,
-                                                          num_samples, max_words, settings)
+        latest_question, latest_answer, conversation = handle_followups(conversation, latest_question, latest_answer,
+                                                                        system_prompt, num_samples, max_words, settings)
 
 
 if __name__ == "__main__":
