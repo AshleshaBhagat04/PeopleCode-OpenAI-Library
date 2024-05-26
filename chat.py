@@ -45,11 +45,11 @@ def main():
             sys.exit(0)
         elif user_prompt == "generate":
             # Generate a new prompt
-            prompt_context = input("Enter the context for generating a prompt: ").strip()
+            user_prompt = input("Enter the context for generating a prompt: ").strip()
             try:
                 max_words = 25
                 max_words = int(input("Enter the maximum number of words for the generated prompt or press enter to use default: ").strip())
-                user_prompt = generate_prompt(prompt_context, max_words, settings)
+                user_prompt = generate_prompt(user_prompt, max_words, settings)
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Invalid input for maximum number of words. Please enter a valid integer.")

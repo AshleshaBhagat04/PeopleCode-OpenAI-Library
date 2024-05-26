@@ -65,6 +65,7 @@ def generate_followups(conversation, question, response, num_samples, max_words,
     Returns:
         list: A list of follow-up questions.
     """
+    recent_history = f"User: {question}\nAssistant: {response}\n"
     convo_history = conversation + [
         {"role": "user", "content": question},
         {"role": "assistant", "content": response}
@@ -73,9 +74,9 @@ def generate_followups(conversation, question, response, num_samples, max_words,
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate {num_samples} follow-up questions that the user could choose to ask based on the conversation history provided below. Each follow-up question should be no more than {max_words} words."},
+             "content": f"Generate {num_samples} follow-up questions that the user could choose to ask based on the conversation. Each follow-up question should be no more than {max_words} words."},
             {"role": "user",
-             "content": "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in convo_history])}
+             "content": recent_history}
         ]
     )
     followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
@@ -104,7 +105,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions):
-            print(f"{idx + 1}. {question}")
+            print(f"{question}")
         choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
             choice_idx = int(choice) - 1
