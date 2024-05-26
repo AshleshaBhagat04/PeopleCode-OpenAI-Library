@@ -79,7 +79,7 @@ with st.expander("Generate Follow-up Questions"):
             st.session_state.followup_questions = followup_questions
             st.write("Follow-up Questions:")
             for idx, question in enumerate(followup_questions):
-                st.write(f"{idx + 1}. {question}")
+                st.write(f"{question}")
 
 # Select and ask follow-up question
 if 'followup_questions' in st.session_state and st.session_state.followup_questions:
