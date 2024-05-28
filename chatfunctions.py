@@ -42,7 +42,7 @@ def generate_prompt(context, max_words, settings):
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate a prompt based on the context provided below in no more than {max_words} words."},
+             "content": f"Generate a prompt in no more than {max_words} words. From the user perspective based on the context provided below."},
             {"role": "user", "content": context}
         ]
     )
@@ -50,12 +50,11 @@ def generate_prompt(context, max_words, settings):
     return prompt
 
 
-def generate_followups(conversation, question, response, num_samples, max_words, settings):
+def generate_followups(question, response, num_samples, max_words, settings):
     """
     Generates follow-up questions.
 
     Args:
-        conversation (list): The conversation history.
         question (str): The previous question asked.
         response (str): The response to the previous question.
         num_samples (int): Number of follow-up questions to generate.
@@ -66,15 +65,11 @@ def generate_followups(conversation, question, response, num_samples, max_words,
         list: A list of follow-up questions.
     """
     recent_history = f"User: {question}\nAssistant: {response}\n"
-    convo_history = conversation + [
-        {"role": "user", "content": question},
-        {"role": "assistant", "content": response}
-    ]
     followups = openai.ChatCompletion.create(
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate {num_samples} follow-up questions that the user could choose to ask based on the conversation. Each follow-up question should be no more than {max_words} words."},
+             "content": f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
             {"role": "user",
              "content": recent_history}
         ]
@@ -99,7 +94,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
     Returns:
         tuple: A tuple with the updated latest question and response, and the conversation history.
     """
-    followup_questions = generate_followups(conversation, latest_question, latest_answer, num_samples, max_words,
+    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words,
                                             settings)
 
     if followup_questions:

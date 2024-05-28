@@ -74,7 +74,7 @@ with st.expander("Generate Follow-up Questions"):
             latest_question = st.session_state.conversation[-2]['content'] if len(
                 st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = generate_followups(st.session_state.conversation, latest_question, latest_answer,
+            followup_questions = generate_followups(latest_question, latest_answer,
                                                     num_samples, max_words_followups, settings)
             st.session_state.followup_questions = followup_questions
             st.write("Follow-up Questions:")
