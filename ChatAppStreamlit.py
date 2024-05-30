@@ -15,7 +15,7 @@ openai.api_key = api_key
 st.title("ChatApp")
 
 # Model selection
-model_options = ["gpt-3.5-turbo", "gpt-4"]
+model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
 
 settings = {"model": selected_model}

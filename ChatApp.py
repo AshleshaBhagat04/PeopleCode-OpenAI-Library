@@ -11,7 +11,7 @@ def main():
         sys.exit(-1)
 
     # Define available models
-    model_options = ["gpt-3.5-turbo", "gpt-4"]
+    model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
     print("Available models:")
     for idx, model in enumerate(model_options, start=1):
         print(f"{idx}. {model}")
