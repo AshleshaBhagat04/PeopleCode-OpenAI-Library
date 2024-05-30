@@ -1,3 +1,9 @@
+# ChatApp.py
+# This initializes the OpenAI API key and sets up conversation through the command line. It interacts
+# with the user to select a model and ask questions based on the provided context. It handles model selection,
+# generates prompts, and manages follow-up questions.
+
+
 import sys
 import os
 from USFGenAI import ask_question, generate_prompt, handle_followups

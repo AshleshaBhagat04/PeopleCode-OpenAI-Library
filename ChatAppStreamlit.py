@@ -1,3 +1,8 @@
+# ChatAppStreamlit.py
+# This creates a Streamlit application that interacts with OpenAI's language models.
+# It allows users to select a model, ask questions, generate prompts, and handle follow-up questions.
+
+
 import os
 import openai
 import streamlit as st

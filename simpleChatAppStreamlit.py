@@ -1,3 +1,8 @@
+# simpleChatAppStreamlit.py
+# This Streamlit app allows users to interact with OpenAI's language model. Users can enter prompts
+# and receive responses on the web interface.
+
+
 import openai
 import os
 import streamlit as st

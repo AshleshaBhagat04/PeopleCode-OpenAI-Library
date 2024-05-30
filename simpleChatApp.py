@@ -1,3 +1,7 @@
+# simpleChatApp.py
+# This allows the user to interact with OpenAI's language model via the command line. The user
+# can input prompts and receive responses from the model.
+
 import openai
 import os
 import sys

@@ -1,3 +1,8 @@
+# USFGenAI.py
+# This contains the functions for interacting with the OpenAI API. It includes asking questions,
+# generating prompts, generating follow-ups, and handling follow-ups.
+
+
 import openai
 
 

@@ -1,3 +1,8 @@
+# chatAppWithSamplePrompts.py
+# This interacts with the OpenAI API to facilitate a conversation through the command
+# line. Users can ask questions, generate prompts, and get follow-up questions.
+
+
 import openai
 import os
 import sys

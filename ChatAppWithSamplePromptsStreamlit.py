@@ -1,3 +1,8 @@
+# chatAppWithSamplePromptsStreamlit.py
+# This Streamlit app interacts with the OpenAI API to facilitate a conversation.
+# Users can ask questions, generate prompts, and get follow-up questions.
+
+
 import openai
 import os
 import streamlit as st
