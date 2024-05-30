@@ -42,7 +42,7 @@ def generate_prompt(context, max_words, settings):
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate a prompt in no more than {max_words} words. From the user perspective based on the context provided below."},
+             "content": f"Generate a prompt in no more than {max_words} words from the user perspective based on the context provided below."},
             {"role": "user", "content": context}
         ]
     )
@@ -69,7 +69,7 @@ def generate_followups(question, response, num_samples, max_words, settings):
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
+             "content": f"Generate {num_samples} follow-up questions to ask from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
             {"role": "user",
              "content": recent_history}
         ]
