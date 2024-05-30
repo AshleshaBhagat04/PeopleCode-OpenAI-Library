@@ -1,6 +1,6 @@
 import sys
 import os
-from chatfunctions import ask_question, generate_prompt, handle_followups
+from USFGenAI import ask_question, generate_prompt, handle_followups
 
 
 def main():

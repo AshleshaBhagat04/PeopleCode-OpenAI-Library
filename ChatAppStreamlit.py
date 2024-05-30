@@ -2,7 +2,7 @@ import os
 import openai
 import streamlit as st
 
-from chatfunctions import ask_question, generate_prompt, generate_followups
+from USFGenAI import ask_question, generate_prompt, generate_followups
 
 # Load API key from environment variable
 api_key = os.getenv('OPENAI_API_KEY')
