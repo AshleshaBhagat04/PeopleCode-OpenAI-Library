@@ -6,7 +6,7 @@
 
 import sys
 import os
-from USFGenAI import ask_question, generate_prompt, handle_followups
+from USFGenAI import *
 
 
 def main():
@@ -15,6 +15,7 @@ def main():
     if not api_key:
         print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         sys.exit(-1)
+    set_api_key(api_key)
 
     # Define available models
     model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -32,8 +33,7 @@ def main():
             print("Invalid choice. Using default model.")
     except ValueError:
         print("Invalid input. Using default model.")
-
-    settings = {"model": selected_model}
+    set_model(selected_model)
 
     # Conversation history
     conversation = []
@@ -55,7 +55,7 @@ def main():
             try:
                 max_words = 25
                 max_words = int(input("Enter the maximum number of words for the generated prompt or press enter to use default: ").strip())
-                user_prompt = generate_prompt(user_prompt, max_words, settings)
+                user_prompt = generate_prompt(user_prompt, max_words)
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Invalid input for maximum number of words. Please enter a valid integer.")
@@ -74,7 +74,7 @@ def main():
             print("Invalid input. Please enter valid integers for the number of follow-up questions and maximum words.")
 
         # Get response from the model
-        response = ask_question(conversation, user_prompt, system_prompt, settings)
+        response = ask_question(conversation, user_prompt, system_prompt)
         answer = response['reply']
         conversation = response['conversation']
         latest_question = user_prompt
@@ -84,7 +84,7 @@ def main():
 
         # Handle follow-up questions
         latest_question, latest_answer, conversation = handle_followups(conversation, latest_question, latest_answer,
-                                                                        system_prompt, num_samples, max_words, settings)
+                                                                        system_prompt, num_samples, max_words)
 
 
 if __name__ == "__main__":

@@ -122,7 +122,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions):
-            print(f"{idx + 1}: {question}")
+            print(f"{question}")
         choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
             choice_idx = int(choice) - 1

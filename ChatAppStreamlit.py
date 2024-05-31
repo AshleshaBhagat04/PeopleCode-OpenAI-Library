@@ -4,17 +4,16 @@
 
 
 import os
-import openai
 import streamlit as st
 
-from USFGenAI import ask_question, generate_prompt, generate_followups
+from USFGenAI import *
 
 # Load API key from environment variable
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
     st.stop()
-openai.api_key = api_key
+set_api_key(api_key)
 
 # Streamlit App
 st.title("ChatApp")
@@ -22,8 +21,7 @@ st.title("ChatApp")
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
-
-settings = {"model": selected_model}
+set_model(selected_model)
 
 # Initialize session state variables
 if 'conversation' not in st.session_state:
@@ -44,7 +42,7 @@ user_prompt = st.text_input("Enter your prompt:", "")
 # Ask button
 if st.button("Ask"):
     if user_prompt:
-        response = ask_question(st.session_state.conversation, user_prompt, st.session_state.instructions, settings)
+        response = ask_question(st.session_state.conversation, user_prompt, st.session_state.instructions)
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
 
@@ -55,7 +53,7 @@ with st.expander("Generate a Prompt"):
 
     if st.button("Generate Prompt"):
         if context:
-            generated_prompt = generate_prompt(context, max_words, settings)
+            generated_prompt = generate_prompt(context, max_words)
             st.session_state.generated_prompt = generated_prompt
             st.text_area("Generated Prompt:", generated_prompt, height=100)
 
@@ -64,7 +62,7 @@ if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
         response = ask_question(st.session_state.conversation, st.session_state.generated_prompt,
-                                st.session_state.instructions, settings)
+                                st.session_state.instructions)
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
         st.session_state.generated_prompt = ""
@@ -80,7 +78,7 @@ with st.expander("Generate Follow-up Questions"):
                 st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
             followup_questions = generate_followups(latest_question, latest_answer,
-                                                    num_samples, max_words_followups, settings)
+                                                    num_samples, max_words_followups)
             st.session_state.followup_questions = followup_questions
             st.write("Follow-up Questions:")
             for idx, question in enumerate(followup_questions):
@@ -93,7 +91,7 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
     if st.button("Ask Follow-up"):
         selected_followup = st.session_state.followup_questions[followup_choice]
         followup_response = ask_question(st.session_state.conversation, selected_followup,
-                                         st.session_state.instructions, settings)
+                                         st.session_state.instructions)
         st.session_state.conversation = followup_response['conversation']
         st.text_area("Response:", followup_response['reply'], height=200)
 

@@ -5,22 +5,40 @@
 import os
 import sys
 
-from USFGenAI import ask_question
+from USFGenAI import *
 
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
     sys.exit(-1)
+set_api_key(api_key)
+
+# Define available models
+model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
+print("Available models:")
+for idx, model in enumerate(model_options, start=1):
+    print(f"{idx}. {model}")
+
+# Select model with default
+selected_model = model_options[0]
+try:
+    model_choice = int(input("Select the model to use: ").strip())
+    if 1 <= model_choice <= len(model_options):
+        selected_model = model_options[model_choice - 1]
+    else:
+        print("Invalid choice. Using default model.")
+except ValueError:
+    print("Invalid input. Using default model.")
+set_model(selected_model)
 
 conversation = []
 
 print("How can I help you today?")
 while True:
-    user_prompt = input("Enter a prompt: ")
+    user_prompt = input("Enter a prompt. Type 'exit' to quit: ")
     if user_prompt.strip().lower() == "exit":
         sys.exit(-1)
-    response = ask_question(conversation, user_prompt, "You are a helpful assistant.",
-                            settings={"model": "gpt-3.5-turbo", }
+    response = ask_question(conversation, user_prompt, "You are a helpful assistant."
                             )
     answer = response['reply']
     conversation = response['conversation']
