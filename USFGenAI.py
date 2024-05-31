@@ -1,23 +1,45 @@
 # USFGenAI.py
-# This contains the functions for interacting with the OpenAI API. It includes asking questions,
-# generating prompts, generating follow-ups, and handling follow-ups.
-
+# This module abstracts interactions with the OpenAI API for generating prompts, asking questions,
+# and generating follow-up questions.
 
 import openai
 
+settings = {}
 
-def ask_question(conversation, question, instructions, settings):
+
+def set_api_key(api_key):
     """
-    Asks a question to the OpenAI Chat API
+    Sets the API key for the OpenAI API.
+
+    Args:
+        api_key (str): The API key.
+    """
+    openai.api_key = api_key
+
+
+def set_model(model_name):
+    """
+    Sets the model for the OpenAI API.
+
+    Args:
+        model_name (str): The model name.
+    """
+    global settings
+    settings = {"model": model_name}
+
+
+def ask_question(conversation, question, instructions):
+    """
+    Asks a question to the OpenAI Chat API.
 
     Args:
         conversation (list): The conversation history.
         question (str): The question to ask.
         instructions (str): Instructions or system prompt for the chat.
-        settings (dict): The model to use.
 
     Returns:
         dict: The response from the OpenAI Chat API,
+              containing the reply and updated conversation.
     """
     conversation.append({"role": "user", "content": question})
     response = openai.ChatCompletion.create(
@@ -31,17 +53,16 @@ def ask_question(conversation, question, instructions, settings):
     return {"reply": answer, "conversation": conversation}
 
 
-def generate_prompt(context, max_words, settings):
+def generate_prompt(context, max_words):
     """
     Generates a prompt based on the context.
 
     Args:
         context (str): The context for generating the prompt.
         max_words (int): Maximum number of words for the prompt.
-        settings (dict): The model to use.
 
     Returns:
-        str: The prompt.
+        str: The generated prompt.
     """
     response = openai.ChatCompletion.create(
         model=settings["model"],
@@ -55,7 +76,7 @@ def generate_prompt(context, max_words, settings):
     return prompt
 
 
-def generate_followups(question, response, num_samples, max_words, settings):
+def generate_followups(question, response, num_samples, max_words):
     """
     Generates follow-up questions.
 
@@ -64,7 +85,6 @@ def generate_followups(question, response, num_samples, max_words, settings):
         response (str): The response to the previous question.
         num_samples (int): Number of follow-up questions to generate.
         max_words (int): Maximum number of words for each follow-up question.
-        settings (dict): The model to use.
 
     Returns:
         list: A list of follow-up questions.
@@ -75,15 +95,14 @@ def generate_followups(question, response, num_samples, max_words, settings):
         messages=[
             {"role": "system",
              "content": f"Generate {num_samples} follow-up questions to ask from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
-            {"role": "user",
-             "content": recent_history}
+            {"role": "user", "content": recent_history}
         ]
     )
     followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
     return followup_qs
 
 
-def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words, settings):
+def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words):
     """
     Handles the process of presenting and selecting follow-up questions.
 
@@ -94,18 +113,16 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
         system_prompt (str): The system prompt.
         num_samples (int): Number of follow-up questions to generate.
         max_words (int): Maximum number of words for each follow-up question.
-        settings (dict): The model to use.
 
     Returns:
         tuple: A tuple with the updated latest question and response, and the conversation history.
     """
-    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words,
-                                            settings)
+    followup_questions = generate_followups(latest_question, latest_answer, num_samples, max_words)
 
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions):
-            print(f"{question}")
+            print(f"{idx + 1}: {question}")
         choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
             choice_idx = int(choice) - 1
@@ -113,7 +130,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
                 return latest_question, latest_answer, conversation
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
-                response = ask_question(conversation, user_prompt, system_prompt, settings)
+                response = ask_question(conversation, user_prompt, system_prompt)
                 latest_question = user_prompt
                 latest_answer = response['reply']
                 print("Response:\n" + latest_answer)
