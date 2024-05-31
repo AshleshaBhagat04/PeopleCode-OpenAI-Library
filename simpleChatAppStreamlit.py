@@ -7,12 +7,15 @@ import openai
 import os
 import streamlit as st
 
+from USFGenAI import ask_question
+
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
     st.stop()
-
 openai.api_key = api_key
+
+conversation = []
 
 st.title("Simple Q&A")
 
@@ -23,16 +26,11 @@ if st.button("Submit"):
         st.stop()
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_prompt}
-            ]
-        )
-
-        st.write("Response: ")
-        st.write(response['choices'][0]['message']['content'].strip())
+        response = ask_question(conversation, user_prompt, "You are a helpful assistant.",
+                                settings={"model": "gpt-3.5-turbo", }
+                                )
+        st.session_state.conversation = response['conversation']
+        st.text_area("Response:", response['reply'], height=200)
 
     except Exception as e:
         st.error(f"An error occurred: {e}")

@@ -6,23 +6,23 @@ import openai
 import os
 import sys
 
+from USFGenAI import ask_question
+
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
     sys.exit(-1)
+
+conversation = []
 
 print("How can I help you today?")
 while True:
     user_prompt = input("Enter a prompt: ")
     if user_prompt.strip().lower() == "exit":
         sys.exit(-1)
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": user_prompt}
-        ]
-    )
-
-    print("Response: ")
-    print(response['choices'][0]['message']['content'].strip())
+    response = ask_question(conversation, user_prompt, "You are a helpful assistant.",
+                            settings={"model": "gpt-3.5-turbo", }
+                            )
+    answer = response['reply']
+    conversation = response['conversation']
+    print("Response:\n" + answer)
