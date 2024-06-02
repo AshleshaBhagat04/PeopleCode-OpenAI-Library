@@ -60,8 +60,6 @@ else:
     display_prompts(st.session_state.prompts)
 
 choice = st.radio("Choose a question to ask:", options=[1, 2, 3])
-
-# Use st.empty() to dynamically clear input field
 input_container = st.empty()
 user_prompt = input_container.text_input("Ask a question: ")
 
@@ -77,7 +75,6 @@ if ask_selected or ask_custom:
     elif ask_custom and user_prompt:
         response = ask_question(st.session_state.conversation, user_prompt, system_prompt)
         st.session_state.latest_question = user_prompt
-        user_prompt = ""  # Clear the input box after asking
 
     st.session_state.latest_answer = response['reply']
     st.session_state.conversation = response['conversation']
