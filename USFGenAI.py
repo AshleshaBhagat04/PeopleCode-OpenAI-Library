@@ -94,7 +94,7 @@ def generate_followups(question, response, num_samples, max_words):
         model=settings["model"],
         messages=[
             {"role": "system",
-             "content": f"Generate {num_samples} follow-up questions to ask from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
+             "content": f"Generate {num_samples} follow-up questions to from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
             {"role": "user", "content": recent_history}
         ]
     )
