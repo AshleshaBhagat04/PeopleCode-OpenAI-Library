@@ -1,7 +1,3 @@
-# USFGenAI.py
-# This module abstracts interactions with the OpenAI API for generating prompts, asking questions,
-# and generating follow-up questions.
-
 import openai
 
 settings = {}
@@ -42,13 +38,12 @@ def ask_question(conversation, question, instructions):
               containing the reply and updated conversation.
     """
     conversation.append({"role": "user", "content": question})
-    response = openai.ChatCompletion.create(
-        model=settings["model"],
-        messages=[
-                     {"role": "system", "content": instructions}
-                 ] + conversation
-    )
-    answer = response['choices'][0]['message']['content'].strip()
+    response = openai.chat.completions.create(model=settings["model"],
+                                              messages=[
+                                                           {"role": "system", "content": instructions}
+                                                       ] + conversation)
+
+    answer = response.choices[0].message.content.strip()
     conversation.append({"role": "assistant", "content": answer})
     return {"reply": answer, "conversation": conversation}
 
@@ -64,15 +59,13 @@ def generate_prompt(context, max_words):
     Returns:
         str: The generated prompt.
     """
-    response = openai.ChatCompletion.create(
-        model=settings["model"],
-        messages=[
-            {"role": "system",
-             "content": f"Generate a prompt in no more than {max_words} words from the user perspective based on the context provided below."},
-            {"role": "user", "content": context}
-        ]
-    )
-    prompt = response['choices'][0]['message']['content'].strip()
+    response = openai.chat.completions.create(model=settings["model"],
+                                              messages=[
+                                                  {"role": "system",
+                                                   "content": f"Generate a prompt in no more than {max_words} words from the user perspective based on the context provided below."},
+                                                  {"role": "user", "content": context}
+                                              ])
+    prompt = response.choices[0].message.content.strip()
     return prompt
 
 
@@ -90,15 +83,13 @@ def generate_followups(question, response, num_samples, max_words):
         list: A list of follow-up questions.
     """
     recent_history = f"User: {question}\nAssistant: {response}\n"
-    followups = openai.ChatCompletion.create(
-        model=settings["model"],
-        messages=[
-            {"role": "system",
-             "content": f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
-            {"role": "user", "content": recent_history}
-        ]
-    )
-    followup_qs = followups['choices'][0]['message']['content'].strip().split('\n')
+    followups = openai.chat.completions.create(model=settings["model"],
+                                               messages=[
+                                                   {"role": "system",
+                                                    "content": f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
+                                                   {"role": "user", "content": recent_history}
+                                               ])
+    followup_qs = followups.choices[0].message.content.strip().split('\n')
     return followup_qs
 
 
@@ -132,9 +123,9 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
                 user_prompt = followup_questions[choice_idx]
                 response = ask_question(conversation, user_prompt, system_prompt)
                 latest_question = user_prompt
-                latest_answer = response['reply']
+                latest_answer = response.reply
                 print("Response:\n" + latest_answer)
-                return latest_question, latest_answer, response['conversation']
+                return latest_question, latest_answer, response.conversation
             else:
                 print("Invalid choice.")
         except ValueError:
