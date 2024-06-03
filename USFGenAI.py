@@ -1,3 +1,4 @@
+from pathlib import Path
 from openai import OpenAI
 
 client = OpenAI()
@@ -138,6 +139,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
             print("Invalid input.")
     return latest_question, latest_answer, conversation
 
+
 def text_to_speech(text):
     """
     Converts text to speech using OpenAI's TTS model.
@@ -145,8 +147,8 @@ def text_to_speech(text):
     Args:
         text (str): The text to convert to speech.
     """
-    speech_file_path = Path(__file__).parent / "response.mp3"
-    response = openai.Audio.create(
+    speech_file_path = Path(__file__).parent / "speech.mp3"
+    response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
         input=text
