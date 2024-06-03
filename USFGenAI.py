@@ -1,5 +1,6 @@
-import openai
+from openai import OpenAI
 
+client = OpenAI()
 settings = {}
 
 
@@ -10,7 +11,7 @@ def set_api_key(api_key):
     Args:
         api_key (str): The API key.
     """
-    openai.api_key = api_key
+    client.api_key = api_key
 
 
 def set_model(model_name):
@@ -38,11 +39,12 @@ def ask_question(conversation, question, instructions):
               containing the reply and updated conversation.
     """
     conversation.append({"role": "user", "content": question})
-    response = openai.chat.completions.create(model=settings["model"],
+    response = client.chat.completions.create(model=settings["model"],
                                               messages=[
                                                            {"role": "system", "content": instructions}
                                                        ] + conversation)
-
+    (dict(response).get('usage'))
+    (response.model_dump_json(indent=2))
     answer = response.choices[0].message.content.strip()
     conversation.append({"role": "assistant", "content": answer})
     return {"reply": answer, "conversation": conversation}
@@ -59,12 +61,14 @@ def generate_prompt(context, max_words):
     Returns:
         str: The generated prompt.
     """
-    response = openai.chat.completions.create(model=settings["model"],
+    response = client.chat.completions.create(model=settings["model"],
                                               messages=[
                                                   {"role": "system",
                                                    "content": f"Generate a prompt in no more than {max_words} words from the user perspective based on the context provided below."},
                                                   {"role": "user", "content": context}
                                               ])
+    (dict(response).get('usage'))
+    (response.model_dump_json(indent=2))
     prompt = response.choices[0].message.content.strip()
     return prompt
 
@@ -83,12 +87,14 @@ def generate_followups(question, response, num_samples, max_words):
         list: A list of follow-up questions.
     """
     recent_history = f"User: {question}\nAssistant: {response}\n"
-    followups = openai.chat.completions.create(model=settings["model"],
+    followups = client.chat.completions.create(model=settings["model"],
                                                messages=[
                                                    {"role": "system",
                                                     "content": f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."},
                                                    {"role": "user", "content": recent_history}
                                                ])
+    (dict(followups).get('usage'))
+    (followups.model_dump_json(indent=2))
     followup_qs = followups.choices[0].message.content.strip().split('\n')
     return followup_qs
 
