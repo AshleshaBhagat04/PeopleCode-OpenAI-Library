@@ -129,11 +129,27 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
                 user_prompt = followup_questions[choice_idx]
                 response = ask_question(conversation, user_prompt, system_prompt)
                 latest_question = user_prompt
-                latest_answer = response.reply
+                latest_answer = response['reply']
                 print("Response:\n" + latest_answer)
-                return latest_question, latest_answer, response.conversation
+                return latest_question, latest_answer, response['conversation']
             else:
                 print("Invalid choice.")
         except ValueError:
             print("Invalid input.")
     return latest_question, latest_answer, conversation
+
+def text_to_speech(text):
+    """
+    Converts text to speech using OpenAI's TTS model.
+
+    Args:
+        text (str): The text to convert to speech.
+    """
+    speech_file_path = Path(__file__).parent / "response.mp3"
+    response = openai.Audio.create(
+        model="tts-1",
+        voice="alloy",
+        input=text
+    )
+    response.stream_to_file(speech_file_path)
+    return response
