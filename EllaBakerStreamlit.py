@@ -29,6 +29,7 @@ if 'prompts' not in st.session_state:
     st.session_state.prompts = []
 
 st.title("Chat with Ella Baker")
+st.image("https://hulshofschmidt.wordpress.com/wp-content/uploads/2014/12/ella-baker.jpg")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -59,30 +60,43 @@ if st.session_state.latest_question:
 else:
     display_prompts(st.session_state.prompts)
 
-choice = st.radio("Choose a question to ask:", options=[1, 2, 3])
+choice = st.radio("Choose a question to ask:", options=[1, 2, 3], index=0)
 input_container = st.empty()
-user_prompt = input_container.text_input("Ask a question: ")
+user_prompt = input_container.text_input("Or ask your own question: ")
 
 # Logic for handling buttons
 ask_selected = st.button("Ask Selected Question")
 ask_custom = st.button("Ask")
 
-if ask_selected or ask_custom:
-    if ask_selected:
-        selected_prompt = st.session_state.prompts[choice - 1]
-        response = ask_question(st.session_state.conversation, selected_prompt, system_prompt)
-        st.session_state.latest_question = selected_prompt
-    elif ask_custom and user_prompt:
-        response = ask_question(st.session_state.conversation, user_prompt, system_prompt)
-        st.session_state.latest_question = user_prompt
 
+def update_conversation(prompt):
+    response = ask_question(st.session_state.conversation, prompt, system_prompt)
+    st.session_state.latest_question = prompt
     st.session_state.latest_answer = response['reply']
     st.session_state.conversation = response['conversation']
-
-    # Generate follow-up questions automatically
     st.session_state.followup_questions = generate_followups(
-        st.session_state.latest_question, st.session_state.latest_answer,
-        3, 25)
+        st.session_state.latest_question, st.session_state.latest_answer, 3, 25)
+    st.rerun()
 
-# Display response
-st.text_area("Response:", st.session_state.latest_answer, height=200)
+
+if ask_selected:
+    selected_prompt = st.session_state.prompts[choice - 1]
+    update_conversation(selected_prompt)
+
+elif ask_custom and user_prompt:
+    update_conversation(user_prompt)
+
+if st.session_state.latest_answer:
+    st.session_state.user_prompt = ""
+    user_prompt = ""
+    # Display response
+    st.text_area("Response:", st.session_state.latest_answer, height=200)
+
+# Provide functionality to reset the conversation
+if st.button("Reset Conversation"):
+    st.session_state.conversation = []
+    st.session_state.latest_question = ""
+    st.session_state.latest_answer = ""
+    st.session_state.followup_questions = []
+    generate_initial_prompts()
+    st.rerun()
