@@ -7,7 +7,7 @@ import os
 import openai
 import streamlit as st
 
-from USFGenAI import ask_question, generate_prompt, generate_followups
+from USFGenAI import ask_question, generate_prompt, generate_followups, set_model, set_api_key
 
 def getQuestions(questions):
     questions.append("Compare Trump/Biden on Womens Rights")
@@ -23,7 +23,7 @@ def update_text_input_value(new_value):
     st.session_state['text_input_value'] = new_value
 
 def ask_it(curQuestion):
-    response = ask_question(st.session_state.conversaton, questions[curQuestion], st.session_state.instructions, settings)
+    response = ask_question(st.session_state.conversation, questions[curQuestion], st.session_state.instructions)
     st.text_area("OpenAI's Response:", response['reply'], height=300)
     if (curQuestion==5):
         
@@ -42,7 +42,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
     st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
     st.stop()
-openai.api_key = api_key
+set_api_key(api_key)
 
 questions=[]
 getQuestions(questions)
@@ -53,11 +53,11 @@ st.title("Election 2024: Is Voting Worth it?")
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = model_options[1]
 
-settings = {"model": selected_model}
+set_model(selected_model)
 
 # Initialize session state variables
 if 'conversation' not in st.session_state:
-    st.session_state.conversaton = []
+    st.session_state.conversation = []
 
 if 'generated_prompt' not in st.session_state:
     st.session_state.generated_prompt = ""
