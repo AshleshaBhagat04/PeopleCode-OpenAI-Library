@@ -146,12 +146,19 @@ def text_to_speech(text):
 
     Args:
         text (str): The text to convert to speech.
+
+    Returns:
+        object: The response object from OpenAI audio API.
     """
-    speech_file_path = Path(__file__).parent / "speech.mp3"
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input=text
-    )
-    response.stream_to_file(speech_file_path)
-    return response
+    try:
+        speech_file_path = Path(__file__).parent / "speech.mp3"
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input=text
+        )
+        response.stream_to_file(speech_file_path)
+        return response.content
+    except Exception as e:
+        print(f"Error converting text to speech: {e}")
+        return None
