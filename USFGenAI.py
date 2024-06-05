@@ -162,3 +162,12 @@ def text_to_speech(text):
     except Exception as e:
         print(f"Error converting text to speech: {e}")
         return None
+
+
+def speech_recognition(file):
+    audio_file = open(file, "rb")
+    translation = client.audio.translations.create(
+        model="whisper-1",
+        file=audio_file
+    )
+    return translation.text
