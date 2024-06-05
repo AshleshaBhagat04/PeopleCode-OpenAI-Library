@@ -17,7 +17,7 @@ if not api_key:
 set_api_key(api_key)
 
 # Streamlit App
-st.title("ChatApp")
+st.title("TTS ChatApp")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
