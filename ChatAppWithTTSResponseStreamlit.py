@@ -1,4 +1,4 @@
-# ChatAppStreamlitWithTTSResponse.py
+# ChatAppWithTTSResponseStreamlit.py
 # This creates a Streamlit application that interacts with OpenAI's language models.
 # It allows users to select a model, ask questions, generate prompts, and handle follow-up questions. All responses
 # can be played and heard with the help of the text to speech library function.
