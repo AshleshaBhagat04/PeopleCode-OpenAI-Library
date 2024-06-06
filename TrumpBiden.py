@@ -3,19 +3,18 @@
 # It allows users to select a model, ask questions, generate prompts, and handle follow-up questions.
 
 
-import os
 import streamlit as st
 
 from USFGenAI import *
 
 
-def getQuestions(questions):
-    questions.append("Compare Trump/Biden on Womens Rights")
-    questions.append("Compare Trump/Biden on Civil Rights")
-    questions.append("What are typical behaviors of an aspiring autocrat?")
-    questions.append("Has Donald Trump exhibited the behavior of an aspiring autocrat?")
-    questions.append("Is a peaceful transition to power important to a democracy?")
-    questions.append("Did Trump facilitate the peaceful transition to power on Jan 6., 2021?")
+def getQuestions(question):
+    question.append("Compare Trump/Biden on Womens Rights")
+    question.append("Compare Trump/Biden on Civil Rights")
+    question.append("What are typical behaviors of an aspiring autocrat?")
+    question.append("Has Donald Trump exhibited the behavior of an aspiring autocrat?")
+    question.append("Is a peaceful transition to power important to a democracy?")
+    question.append("Did Trump facilitate the peaceful transition to power on Jan 6., 2021?")
 
 
 # Function to update the session state
@@ -26,7 +25,7 @@ def update_text_input_value(new_value):
 def ask_it(curQuestion):
     response = ask_question(st.session_state.conversation, questions[curQuestion], st.session_state.instructions)
     st.text_area("OpenAI's Response:", response['reply'], height=300)
-    if (curQuestion == 5):
+    if curQuestion == 5:
         st.text_area("Additional Information", """Democracy depends on elections, the rule of law, and a peaceful transition of power, On Jan 6., 2021, the transition of power was to take place, with the newly elected President, Joe Biden, to be officially confirmed as the new President. On that day, the outgoing President, Donald Trump, spoke to a rally of heavily armed supporters and implored them to go to the Capitol Building and stop the proceedings. He called his own Vice President, Mike Pence, a coward for perform his duties and confirming the new President. The crowd of supporters erected a hanging gallows and chanted for Pence to be hung.
                  """, height=160)
         st.image(
