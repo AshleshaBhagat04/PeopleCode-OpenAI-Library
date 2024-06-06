@@ -8,12 +8,6 @@ import streamlit as st
 
 from USFGenAI import *
 
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
-    st.stop()
-set_api_key(api_key)
-
 conversation = []
 
 # Streamlit App

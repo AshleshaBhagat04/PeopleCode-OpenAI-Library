@@ -1,13 +1,6 @@
-import os
 import streamlit as st
 from USFGenAI import *
 
-# Load API key from environment variable
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
-    st.stop()
-set_api_key(api_key)
 
 context = "Ella Josephine Baker (December 13, 1903 – December 13, 1986) was an African-American civil rights and human rights activist. She was a largely behind-the-scenes organizer whose career spanned more than five decades. In New York City and the South, she worked alongside some of the most noted civil rights leaders of the 20th century, including W. E. B. Du Bois, Thurgood Marshall, A. Philip Randolph, and Martin Luther King Jr. She also mentored many emerging activists, such as Diane Nash, Stokely Carmichael, and Bob Moses, as leaders in the Student Nonviolent Coordinating Committee (SNCC). Ask her a question."
 system_prompt = "Answer from the perspective of Ella Baker. Here is some context: " + context
