@@ -39,13 +39,6 @@ def ask_it(curQuestion):
         st.video("https://www.youtube.com/watch?v=q7aaXt3EARg")
 
 
-# Load API key from environment variable
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
-    st.stop()
-set_api_key(api_key)
-
 questions = []
 getQuestions(questions)
 # Streamlit App

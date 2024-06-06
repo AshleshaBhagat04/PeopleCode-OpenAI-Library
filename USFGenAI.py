@@ -1,18 +1,15 @@
+import os
+import sys
 from pathlib import Path
 from openai import OpenAI
 
-client = OpenAI()
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
+    sys.exit(-1)
+
+client = OpenAI(api_key=api_key)
 settings = {}
-
-
-def set_api_key(api_key):
-    """
-    Sets the API key for the OpenAI API.
-
-    Args:
-        api_key (str): The API key.
-    """
-    client.api_key = api_key
 
 
 def set_model(model_name):
