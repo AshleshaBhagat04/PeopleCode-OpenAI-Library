@@ -20,6 +20,9 @@ if 'followup_questions' not in st.session_state:
 if 'prompts' not in st.session_state:
     st.session_state.prompts = []
 
+if 'user_prompt' not in st.session_state:
+    st.session_state.user_prompt = ""
+
 st.title("Chat with Ella Baker")
 
 # Add image and text description side by side
@@ -63,7 +66,7 @@ else:
 
 choice = st.radio("Choose a question to ask:", options=prompts)
 input_container = st.empty()
-user_prompt = input_container.text_input("Or ask your own question: ")
+user_prompt = input_container.text_input("Or ask your own question:", value=st.session_state.user_prompt)
 
 # Logic for handling buttons
 ask_selected = st.button("Ask Selected Question")
@@ -77,18 +80,19 @@ def update_conversation(prompt):
     st.session_state.conversation = response['conversation']
     st.session_state.followup_questions = generate_followups(
         st.session_state.latest_question, st.session_state.latest_answer, 3, 25)
+    st.session_state.user_prompt = prompt
     st.rerun()
 
 
 if ask_selected:
+    st.session_state.user_prompt = choice
     update_conversation(choice)
 
 elif ask_custom and user_prompt:
+    st.session_state.user_prompt = user_prompt
     update_conversation(user_prompt)
 
 if st.session_state.latest_answer:
-    st.session_state.user_prompt = ""
-    user_prompt = ""
     # Display response
     st.text_area("Response:", st.session_state.latest_answer, height=200)
 
@@ -98,5 +102,6 @@ if st.button("Reset Conversation"):
     st.session_state.latest_question = ""
     st.session_state.latest_answer = ""
     st.session_state.followup_questions = []
+    st.session_state.user_prompt = ""
     generate_initial_prompts()
     st.rerun()
