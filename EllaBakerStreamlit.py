@@ -51,17 +51,17 @@ if not st.session_state.prompts:
 
 def display_prompts(prompts):
     st.write("Sample Prompts")
-    for i, prompt in enumerate(prompts, 1):
-        st.write(f"{i}. {prompt}")
+    for prompt in prompts:
+        st.write(prompt)
 
 
 # Display initial prompts or follow-up questions
 if st.session_state.latest_question:
-    display_prompts(st.session_state.followup_questions)
+    prompts = st.session_state.followup_questions
 else:
-    display_prompts(st.session_state.prompts)
+    prompts = st.session_state.prompts
 
-choice = st.radio("Choose a question to ask:", options=[1, 2, 3], index=0)
+choice = st.radio("Choose a question to ask:", options=prompts)
 input_container = st.empty()
 user_prompt = input_container.text_input("Or ask your own question: ")
 
@@ -81,8 +81,7 @@ def update_conversation(prompt):
 
 
 if ask_selected:
-    selected_prompt = st.session_state.prompts[choice - 1]
-    update_conversation(selected_prompt)
+    update_conversation(choice)
 
 elif ask_custom and user_prompt:
     update_conversation(user_prompt)
