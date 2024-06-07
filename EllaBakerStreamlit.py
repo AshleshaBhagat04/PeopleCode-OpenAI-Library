@@ -52,12 +52,6 @@ if not st.session_state.prompts:
     generate_initial_prompts()
 
 
-def display_prompts(prompts):
-    st.write("Sample Prompts")
-    for prompt in prompts:
-        st.write(prompt)
-
-
 # Display initial prompts or follow-up questions
 if st.session_state.latest_question:
     prompts = st.session_state.followup_questions
@@ -65,6 +59,8 @@ else:
     prompts = st.session_state.prompts
 
 choice = st.radio("Choose a question to ask:", options=prompts)
+speech_file = text_to_speech(str(prompts))
+st.audio(speech_file)
 input_container = st.empty()
 user_prompt = input_container.text_input("Or ask your own question:", value=st.session_state.user_prompt)
 
@@ -95,6 +91,8 @@ elif ask_custom and user_prompt:
 if st.session_state.latest_answer:
     # Display response
     st.text_area("Response:", st.session_state.latest_answer, height=200)
+    speech_file_path = text_to_speech(st.session_state.latest_answer, "nova")
+    st.audio(speech_file_path)
 
 # Provide functionality to reset the conversation
 if st.button("Reset Conversation"):

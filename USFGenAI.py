@@ -137,21 +137,24 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
     return latest_question, latest_answer, conversation
 
 
-def text_to_speech(text):
+def text_to_speech(text, voice=None):
     """
     Converts text to speech using OpenAI's TTS model.
 
     Args:
         text (str): The text to convert to speech.
+        voice: The voice to use
 
     Returns:
         object: The response object from OpenAI audio API.
     """
+    if not voice:
+        voice = "alloy"
     try:
         speech_file_path = Path(__file__).parent / "speech.mp3"
         response = client.audio.speech.create(
             model="tts-1",
-            voice="alloy",
+            voice=voice,
             input=text
         )
         response.stream_to_file(speech_file_path)
