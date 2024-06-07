@@ -2,7 +2,6 @@
 # This Streamlit app allows users to interact with OpenAI's language model. Users can enter prompts
 # and receive responses on the web interface.
 
-import os
 import streamlit as st
 
 from USFGenAI import *

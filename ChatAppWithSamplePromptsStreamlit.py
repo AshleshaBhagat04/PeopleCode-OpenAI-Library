@@ -3,7 +3,6 @@
 # Users can ask questions, generate prompts, and get follow-up questions.
 
 
-import os
 import streamlit as st
 
 from USFGenAI import *

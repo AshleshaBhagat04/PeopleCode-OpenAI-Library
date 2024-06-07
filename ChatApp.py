@@ -4,19 +4,10 @@
 # generates prompts, and manages follow-up questions.
 
 
-import sys
-import os
 from USFGenAI import *
 
 
 def main():
-    # Get API key from environment variables
-    api_key = os.getenv('OPENAI_API_KEY')
-    if not api_key:
-        print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
-        sys.exit(-1)
-    set_api_key(api_key)
-
     # Define available models
     model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
     print("Available models:")

@@ -4,7 +4,6 @@
 # can be played and heard with the help of the text to speech library function.
 
 
-import os
 import streamlit as st
 
 from USFGenAI import *

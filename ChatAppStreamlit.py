@@ -3,7 +3,6 @@
 # It allows users to select a model, ask questions, generate prompts, and handle follow-up questions.
 
 
-import os
 import streamlit as st
 
 from USFGenAI import *
