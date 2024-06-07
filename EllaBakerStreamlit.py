@@ -1,7 +1,6 @@
 import streamlit as st
 from USFGenAI import *
 
-
 context = "Ella Josephine Baker (December 13, 1903 – December 13, 1986) was an African-American civil rights and human rights activist. She was a largely behind-the-scenes organizer whose career spanned more than five decades. In New York City and the South, she worked alongside some of the most noted civil rights leaders of the 20th century, including W. E. B. Du Bois, Thurgood Marshall, A. Philip Randolph, and Martin Luther King Jr. She also mentored many emerging activists, such as Diane Nash, Stokely Carmichael, and Bob Moses, as leaders in the Student Nonviolent Coordinating Committee (SNCC). Ask her a question."
 system_prompt = "Answer from the perspective of Ella Baker. Here is some context: " + context
 
@@ -22,7 +21,16 @@ if 'prompts' not in st.session_state:
     st.session_state.prompts = []
 
 st.title("Chat with Ella Baker")
-st.image("https://hulshofschmidt.wordpress.com/wp-content/uploads/2014/12/ella-baker.jpg")
+
+# Add image and text description side by side
+col1, col2 = st.columns([1, 1])
+with col1:
+    st.image("https://www.crmvet.org/crmpics/band/bakerella.jpg")
+
+with col2:
+    st.write("""
+Ella Baker was an unsung hero in the on-going fight for equality and social justice. Ask her a question to learn more!
+    """)
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -44,7 +52,7 @@ if not st.session_state.prompts:
 def display_prompts(prompts):
     st.write("Sample Prompts")
     for i, prompt in enumerate(prompts, 1):
-        st.write(f"{prompt}")
+        st.write(f"{i}. {prompt}")
 
 
 # Display initial prompts or follow-up questions
