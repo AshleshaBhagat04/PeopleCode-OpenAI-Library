@@ -48,6 +48,63 @@ def ask_question(conversation, question, instructions):
     return {"reply": answer, "conversation": conversation}
 
 
+def ask_question_assistant(assistant_id, question, conversation=None):
+    """
+    Asks a question to an OpenAI Assistant with a specified ID.
+
+    Args:
+        assistant_id (str): The ID of the existing assistant.
+        question (str): The question to ask.
+        conversation (list): The conversation history.
+
+    Returns:
+        dict: The response from the OpenAI Assistant API.
+    """
+    if conversation is None:
+        conversation = []
+
+    conversation.append({"role": "user", "content": question})
+
+    # Create a new thread
+    thread = client.beta.threads.create()
+
+    # Add the user's question to the thread
+    client.beta.threads.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=question
+    )
+
+    # Run the assistant
+    run = client.beta.threads.runs.create_and_poll(
+        thread_id=thread.id,
+        assistant_id=assistant_id,
+        instructions="Please assist the user."
+    )
+
+    if run.status == 'completed':
+        # List all messages in the thread
+        messages = client.beta.threads.messages.list(
+            thread_id=thread.id
+        )
+
+        # Get the latest assistant message
+        latest_message = None
+        for message in messages.data:
+            if message.role == "assistant":
+                latest_message = message.content[0].text.value
+
+        if latest_message:
+            print(latest_message)
+            return {"reply": latest_message, "conversation": conversation}
+        else:
+            print("No assistant response found.")
+            return {"reply": None, "conversation": conversation}
+    else:
+        print(run.status)
+        return {"reply": None, "conversation": conversation}
+
+
 def generate_prompt(context, max_words):
     """
     Generates a prompt based on the context.
@@ -165,9 +222,18 @@ def text_to_speech(text, voice=None):
 
 
 def speech_recognition(file):
-    audio_file = open(file, "rb")
-    translation = client.audio.translations.create(
-        model="whisper-1",
-        file=audio_file
-    )
+    """
+    Converts speech to text using OpenAI's Whisper model.
+
+    Args:
+        file (str): Path to the audio file.
+
+    Returns:
+        str: The transcribed text.
+    """
+    with open(file, "rb") as audio_file:
+        translation = client.audio.translations.create(
+            model="whisper-1",
+            file=audio_file
+        )
     return translation.text
