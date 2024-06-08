@@ -63,7 +63,20 @@ ask_selected = st.button("Ask Selected Question")
 input_container = st.empty()
 user_prompt = input_container.text_input("Or ask your own question:", value=st.session_state.user_prompt)
 
-ask_custom = st.button("Ask")
+# Ask and reset side by side
+col1, col2 = st.columns([1, 1])
+with col1:
+    ask_custom = st.button("Ask")
+with col2:
+    # Provide functionality to reset the conversation
+    if st.button("Reset Conversation"):
+        st.session_state.conversation = []
+        st.session_state.latest_question = ""
+        st.session_state.latest_answer = ""
+        st.session_state.followup_questions = []
+        st.session_state.user_prompt = ""
+        generate_initial_prompts()
+        st.rerun()
 
 
 def update_conversation(prompt):
@@ -90,13 +103,3 @@ if st.session_state.latest_answer:
     st.text_area("Response:", st.session_state.latest_answer, height=200)
     speech_file_path = text_to_speech(st.session_state.latest_answer, "nova")
     st.audio(speech_file_path)
-
-# Provide functionality to reset the conversation
-if st.button("Reset Conversation"):
-    st.session_state.conversation = []
-    st.session_state.latest_question = ""
-    st.session_state.latest_answer = ""
-    st.session_state.followup_questions = []
-    st.session_state.user_prompt = ""
-    generate_initial_prompts()
-    st.rerun()
