@@ -59,13 +59,10 @@ else:
     prompts = st.session_state.prompts
 
 choice = st.radio("Choose a question to ask:", options=prompts)
-speech_file = text_to_speech(str(prompts))
-st.audio(speech_file)
+ask_selected = st.button("Ask Selected Question")
 input_container = st.empty()
 user_prompt = input_container.text_input("Or ask your own question:", value=st.session_state.user_prompt)
 
-# Logic for handling buttons
-ask_selected = st.button("Ask Selected Question")
 ask_custom = st.button("Ask")
 
 
