@@ -95,13 +95,10 @@ def ask_question_assistant(assistant_id, question, conversation=None):
                 latest_message = message.content[0].text.value
 
         if latest_message:
-            print(latest_message)
             return {"reply": latest_message, "conversation": conversation}
         else:
-            print("No assistant response found.")
             return {"reply": None, "conversation": conversation}
     else:
-        print(run.status)
         return {"reply": None, "conversation": conversation}
 
 
