@@ -1,3 +1,4 @@
+
 import os
 import sys
 from pathlib import Path
@@ -97,7 +98,7 @@ def ask_question_assistant(conversation, question, instructions, assistant_id):
         instructions (str): Instructions or system prompt for the chat.
         conversation (list): The conversation history.
     """
-    ask_question(conversation, question, instructions, assistant_id)
+    return ask_question(conversation, question, instructions, assistant_id)
 
 
 def generate_prompt(context, max_words):
