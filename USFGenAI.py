@@ -23,7 +23,7 @@ def set_model(model_name):
     settings = {"model": model_name}
 
 
-def ask_question(conversation, question, instructions):
+def ask_question(conversation, question, instructions, assistant_id=None):
     """
     Asks a question to the OpenAI Chat API.
 
@@ -31,75 +31,73 @@ def ask_question(conversation, question, instructions):
         conversation (list): The conversation history.
         question (str): The question to ask.
         instructions (str): Instructions or system prompt for the chat.
+        assistant_id (str): The ID of the existing assistant.
 
     Returns:
         dict: The response from the OpenAI Chat API,
               containing the reply and updated conversation.
     """
     conversation.append({"role": "user", "content": question})
-    response = client.chat.completions.create(model=settings["model"],
-                                              messages=[
-                                                           {"role": "system", "content": instructions}
-                                                       ] + conversation)
-    (dict(response).get('usage'))
-    (response.model_dump_json(indent=2))
-    answer = response.choices[0].message.content.strip()
-    conversation.append({"role": "assistant", "content": answer})
-    return {"reply": answer, "conversation": conversation}
+
+    if assistant_id is not None:
+        # Create a new thread
+        thread = client.beta.threads.create()
+
+        # Add the user's question to the thread
+        client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=question
+        )
+
+        # Run the assistant
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant_id,
+            instructions=instructions
+        )
+
+        if run.status == 'completed':
+            # List all messages in the thread
+            messages = client.beta.threads.messages.list(
+                thread_id=thread.id
+            )
+
+            # Get the latest assistant message
+            latest_message = None
+            for message in messages.data:
+                if message.role == "assistant":
+                    latest_message = message.content[0].text.value
+
+            if latest_message:
+                return {"reply": latest_message, "conversation": conversation}
+            else:
+                return {"reply": None, "conversation": conversation}
+        else:
+            return {"reply": None, "conversation": conversation}
+    else:
+        response = client.chat.completions.create(model=settings["model"],
+                                                  messages=[
+                                                               {"role": "system", "content": instructions}
+                                                           ] + conversation)
+        (dict(response).get('usage'))
+        (response.model_dump_json(indent=2))
+        answer = response.choices[0].message.content.strip()
+        conversation.append({"role": "assistant", "content": answer})
+        return {"reply": answer, "conversation": conversation}
 
 
-def ask_question_assistant(assistant_id, question, conversation=None):
+def ask_question_assistant(conversation, question, instructions, assistant_id):
     """
     Asks a question to an OpenAI Assistant with a specified ID.
 
     Args:
         assistant_id (str): The ID of the existing assistant.
         question (str): The question to ask.
+        instructions (str): Instructions or system prompt for the chat.
         conversation (list): The conversation history.
-
-    Returns:
-        dict: The response from the OpenAI Assistant API.
     """
-    if conversation is None:
-        conversation = []
-
-    conversation.append({"role": "user", "content": question})
-
-    # Create a new thread
-    thread = client.beta.threads.create()
-
-    # Add the user's question to the thread
-    client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=question
-    )
-
-    # Run the assistant
-    run = client.beta.threads.runs.create_and_poll(
-        thread_id=thread.id,
-        assistant_id=assistant_id,
-        instructions="Please assist the user."
-    )
-
-    if run.status == 'completed':
-        # List all messages in the thread
-        messages = client.beta.threads.messages.list(
-            thread_id=thread.id
-        )
-
-        # Get the latest assistant message
-        latest_message = None
-        for message in messages.data:
-            if message.role == "assistant":
-                latest_message = message.content[0].text.value
-
-        if latest_message:
-            return {"reply": latest_message, "conversation": conversation}
-        else:
-            return {"reply": None, "conversation": conversation}
-    else:
-        return {"reply": None, "conversation": conversation}
+    ask_question(conversation, question, instructions, assistant_id)
 
 
 def generate_prompt(context, max_words):
