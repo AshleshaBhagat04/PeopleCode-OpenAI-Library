@@ -255,45 +255,6 @@ def generate_followups_assistant(question, response, num_samples, max_words, ass
     return generate_followups(question, response, num_samples, max_words, assistant_id)
 
 
-def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words):
-    """
-    Handles the process of presenting and selecting follow-up questions.
-
-    Args:
-        conversation (list): The conversation history.
-        latest_question (str): The latest question asked.
-        latest_answer (str): The response to the latest question.
-        system_prompt (str): The system prompt.
-        num_samples (int): Number of follow-up questions to generate.
-        max_words (int): Maximum number of words for each follow-up question.
-
-    Returns:
-        tuple: A tuple with the updated latest question and response, and the conversation history.
-    """
-    followup_questions = generate_followups_assistant(latest_question, latest_answer, num_samples, max_words, "asst_RRXmeNcR4UEj8YSrzOqWkJYa")
-    if followup_questions:
-        print("Follow-up Questions:")
-        for idx, question in enumerate(followup_questions):
-            print(f"{question}")
-        choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
-        try:
-            choice_idx = int(choice) - 1
-            if choice_idx == -1:
-                return latest_question, latest_answer, conversation
-            elif 0 <= choice_idx < len(followup_questions):
-                user_prompt = followup_questions[choice_idx]
-                response = ask_question(conversation, user_prompt, system_prompt)
-                latest_question = user_prompt
-                latest_answer = response['reply']
-                print("Response:\n" + latest_answer)
-                return latest_question, latest_answer, response['conversation']
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Invalid input.")
-    return latest_question, latest_answer, conversation
-
-
 def text_to_speech(text, voice=None):
     """
     Converts text to speech using OpenAI's TTS model.
