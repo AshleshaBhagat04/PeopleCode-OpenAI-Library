@@ -3,6 +3,14 @@
 # line. Users can ask questions, generate prompts, and get follow-up questions.
 
 
+import sys
+import os
+
+# Add parent directory to sys.path to import USFGenAI module
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from USFGenAI import *
 
 # Define available models
@@ -14,13 +22,13 @@ for idx, model in enumerate(model_options, start=1):
 # Select model with default
 selected_model = model_options[0]
 try:
-    model_choice = int(input("Select the model to use: ").strip())
+    model_choice = int(input("Select the model to use or press enter to use the default: ").strip())
     if 1 <= model_choice <= len(model_options):
         selected_model = model_options[model_choice - 1]
     else:
         print("Invalid choice. Using default model.")
 except ValueError:
-    print("Invalid input. Using default model.")
+    print("Using default model.")
 set_model(selected_model)
 
 conversation = []
@@ -36,7 +44,7 @@ while True:
         user_prompt = generate_prompt(prompt_context, 25)
         print("Generated prompt: " + user_prompt)
     else:
-        system_prompt = input("Enter a potential system prompt or press enter to use default: ")
+        system_prompt = input("Enter a potential system prompt or press enter to use the default: ")
         if not system_prompt.strip():
             system_prompt = "You are a very helpful assistant."
     response = ask_question(conversation, user_prompt, system_prompt)
