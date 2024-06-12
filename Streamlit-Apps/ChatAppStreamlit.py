@@ -1,15 +1,21 @@
-# ChatAppWithTTSResponseStreamlit.py
+# ChatAppStreamlit.py
 # This creates a Streamlit application that interacts with OpenAI's language models.
-# It allows users to select a model, ask questions, generate prompts, and handle follow-up questions. All responses
-# can be played and heard with the help of the text to speech library function.
+# It allows users to select a model, ask questions, generate prompts, and handle follow-up questions.
 
 
 import streamlit as st
+import sys
+import os
+
+# Add parent directory to sys.path to import USFGenAI module
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
 
 from USFGenAI import *
 
 # Streamlit App
-st.title("TTS ChatApp")
+st.title("ChatApp")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -32,16 +38,12 @@ st.session_state.instructions = st.text_area("System Prompt:", st.session_state.
 # User prompt input
 user_prompt = st.text_input("Enter your prompt:", "")
 
+# Ask button
 if st.button("Ask"):
     if user_prompt:
         response = ask_question(st.session_state.conversation, user_prompt, st.session_state.instructions)
         st.session_state.conversation = response['conversation']
-
-        # Display response
         st.text_area("Response:", response['reply'], height=200)
-        speech_file_path = text_to_speech(response['reply'])
-        st.audio(speech_file_path)
-
 
 # Generate prompt section
 with st.expander("Generate a Prompt"):
@@ -57,15 +59,11 @@ with st.expander("Generate a Prompt"):
 # Ask generated prompt button
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
-    speech_file_path = text_to_speech(st.session_state.generated_prompt)
-    st.audio(speech_file_path)
     if st.button("Ask Generated Prompt"):
         response = ask_question(st.session_state.conversation, st.session_state.generated_prompt,
                                 st.session_state.instructions)
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
-        speech_file_path = text_to_speech(response['reply'])
-        st.audio(speech_file_path)
         st.session_state.generated_prompt = ""
 
 # Follow-up questions section
@@ -84,8 +82,6 @@ with st.expander("Generate Follow-up Questions"):
             st.write("Follow-up Questions:")
             for idx, question in enumerate(followup_questions):
                 st.write(f"{question}")
-            speech_file_path = text_to_speech(str(st.session_state.followup_questions))
-            st.audio(speech_file_path)
 
 # Select and ask follow-up question
 if 'followup_questions' in st.session_state and st.session_state.followup_questions:
@@ -97,8 +93,6 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
                                          st.session_state.instructions)
         st.session_state.conversation = followup_response['conversation']
         st.text_area("Response:", followup_response['reply'], height=200)
-        speech_file_path = text_to_speech(followup_response['reply'])
-        st.audio(speech_file_path)
 
 # Display conversation history
 if st.button("Show Conversation History"):
@@ -106,5 +100,3 @@ if st.button("Show Conversation History"):
     for msg in st.session_state.conversation:
         role = "User" if msg['role'] == "user" else "Assistant"
         st.write(f"{role}: {msg['content']}")
-    speech_file_path = text_to_speech(str(st.session_state.conversation))
-    st.audio(speech_file_path)
