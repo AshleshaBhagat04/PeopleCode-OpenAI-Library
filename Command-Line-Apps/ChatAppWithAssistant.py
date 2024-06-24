@@ -1,8 +1,7 @@
-# ChatApp.py
-# This initializes the OpenAI API key and sets up conversation through the command line. It interacts
+# ChatAppWithAssistant.py
+# This script initializes the OpenAI API key and sets up conversation through the command line. It interacts
 # with the user to select a model and ask questions based on the provided context. It handles model selection,
 # generates prompts, and manages follow-up questions.
-
 
 import sys
 import os
@@ -14,10 +13,13 @@ sys.path.append(parent_dir)
 
 from USFGenAI import *
 
+# Set your OpenAI assistant ID here
+ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
+
 
 def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words):
     followup_questions = generate_followups_assistant(latest_question, latest_answer, num_samples, max_words,
-                                                      "asst_RRXmeNcR4UEj8YSrzOqWkJYa")
+                                                      ASSISTANT_ID)
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions):
@@ -83,11 +85,11 @@ def main():
             try:
                 max_words = int(input(
                     "Enter the maximum number of words for the generated prompt or press enter to use the default: ").strip())
-                user_prompt = generate_prompt_assistant(user_prompt, max_words, "asst_RRXmeNcR4UEj8YSrzOqWkJYa")
+                user_prompt = generate_prompt_assistant(user_prompt, max_words, ASSISTANT_ID)
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Using default.")
-                user_prompt = generate_prompt_assistant(user_prompt, 25, "asst_RRXmeNcR4UEj8YSrzOqWkJYa")
+                user_prompt = generate_prompt_assistant(user_prompt, 25, ASSISTANT_ID)
                 print("Generated prompt: " + user_prompt)
         else:
             # Get system prompt or use default
@@ -97,14 +99,15 @@ def main():
         try:
             # Get the number of follow-up questions and maximum words
             num_samples = int(
-                input("Enter the number of follow-up questions to generate or press enter to use the default: ").strip())
+                input(
+                    "Enter the number of follow-up questions to generate or press enter to use the default: ").strip())
             max_words = int(input(
                 "Enter the maximum number of words for questions and prompts or press enter to use the default: ").strip())
         except ValueError:
             print("Using default.")
 
         # Get response from the model
-        response = ask_question_assistant(conversation, user_prompt, system_prompt, "asst_RRXmeNcR4UEj8YSrzOqWkJYa")
+        response = ask_question_assistant(conversation, user_prompt, system_prompt, ASSISTANT_ID)
         answer = response['reply']
         conversation = response['conversation']
         latest_question = user_prompt
