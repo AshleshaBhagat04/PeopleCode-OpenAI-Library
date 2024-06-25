@@ -54,9 +54,9 @@ set_model(selected_model)
 
 
 def generate_initial_prompts():
-    prompt1 = generate_prompt(context, 25)
-    prompt2 = generate_prompt(context, 25)
-    prompt3 = generate_prompt(context, 25)
+    prompt1 = generate_sample_prompts(context, 25)
+    prompt2 = generate_sample_prompts(context, 25)
+    prompt3 = generate_sample_prompts(context, 25)
     st.session_state.prompts = [prompt1, prompt2, prompt3]
 
 

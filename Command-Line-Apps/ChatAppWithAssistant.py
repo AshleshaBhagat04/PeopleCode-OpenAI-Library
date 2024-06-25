@@ -107,7 +107,7 @@ def main():
             print("Using default.")
 
         # Get response from the model
-        response = ask_question_assistant(conversation, user_prompt, system_prompt, ASSISTANT_ID)
+        response = ask_assistant_question(conversation, user_prompt, system_prompt, ASSISTANT_ID)
         answer = response['reply']
         conversation = response['conversation']
         latest_question = user_prompt

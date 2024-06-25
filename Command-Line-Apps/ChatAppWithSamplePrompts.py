@@ -41,7 +41,7 @@ while True:
         sys.exit(-1)
     elif user_prompt.strip().lower() == "generate":
         prompt_context = input("Enter the context for generating a prompt: ")
-        user_prompt = generate_prompt(prompt_context, 25)
+        user_prompt = generate_sample_prompts(prompt_context, 25)
         print("Generated prompt: " + user_prompt)
     else:
         system_prompt = input("Enter a potential system prompt or press enter to use the default: ")

@@ -43,7 +43,7 @@ user_prompt = st.text_input("Enter your prompt:", "")
 # Ask button
 if st.button("Ask"):
     if user_prompt:
-        response = ask_question_assistant(st.session_state.conversation, user_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = ask_assistant_question(st.session_state.conversation, user_prompt, st.session_state.instructions, ASSISTANT_ID)
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
 
@@ -62,7 +62,7 @@ with st.expander("Generate a Prompt"):
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
-        response = ask_question_assistant(st.session_state.conversation, st.session_state.generated_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = ask_assistant_question(st.session_state.conversation, st.session_state.generated_prompt, st.session_state.instructions, ASSISTANT_ID)
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
         st.session_state.generated_prompt = ""
@@ -87,7 +87,7 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
     followup_choice = st.selectbox("Select a follow-up question to ask:", range(len(st.session_state.followup_questions)))
     if st.button("Ask Follow-up"):
         selected_followup = st.session_state.followup_questions[followup_choice]
-        followup_response = ask_question_assistant(st.session_state.conversation, selected_followup, st.session_state.instructions, ASSISTANT_ID)
+        followup_response = ask_assistant_question(st.session_state.conversation, selected_followup, st.session_state.instructions, ASSISTANT_ID)
         st.session_state.conversation = followup_response['conversation']
         st.text_area("Response:", followup_response['reply'], height=200)
 
