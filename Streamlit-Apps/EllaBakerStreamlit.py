@@ -4,7 +4,13 @@
 
 import streamlit as st
 import sys
-sys.path.append("..")
+import os
+
+# Add parent directory to sys.path to import USFGenAI module
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from USFGenAI import *
 
 context = "Ella Josephine Baker (December 13, 1903 – December 13, 1986) was an African-American civil rights and human rights activist. She was a largely behind-the-scenes organizer whose career spanned more than five decades. In New York City and the South, she worked alongside some of the most noted civil rights leaders of the 20th century, including W. E. B. Du Bois, Thurgood Marshall, A. Philip Randolph, and Martin Luther King Jr. She also mentored many emerging activists, such as Diane Nash, Stokely Carmichael, and Bob Moses, as leaders in the Student Nonviolent Coordinating Committee (SNCC). Ask her a question."
@@ -51,7 +57,7 @@ def generate_initial_prompts():
     prompt1 = generate_sample_prompts(context, 1, 25)
     prompt2 = generate_sample_prompts(context, 1, 25)
     prompt3 = generate_sample_prompts(context, 1, 25)
-    st.session_state.prompts = [prompt1, prompt2, prompt3]
+    st.session_state.prompts = [prompt1[0], prompt2[0], prompt3[0]]
 
 
 if not st.session_state.prompts:
