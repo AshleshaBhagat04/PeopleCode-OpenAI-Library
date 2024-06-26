@@ -2,15 +2,8 @@
 # This allows the user to interact with OpenAI's language model via the command line. The user
 # can input prompts and receive responses from the model.
 
-
 import sys
-import os
-
-# Add parent directory to sys.path to import USFGenAI module
-current_dir = os.path.dirname(__file__)
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
-
+sys.path.append("..")
 from USFGenAI import *
 
 # Define available models
