@@ -54,7 +54,7 @@ with st.expander("Generate a Prompt"):
 
     if st.button("Generate Prompt"):
         if context:
-            generated_prompt = generate_prompt_assistant(context, max_words, ASSISTANT_ID)
+            generated_prompt = generate_assistant_sample_prompts(context, max_words, ASSISTANT_ID)
             st.session_state.generated_prompt = generated_prompt
             st.text_area("Generated Prompt:", generated_prompt, height=100)
 
@@ -76,7 +76,7 @@ with st.expander("Generate Follow-up Questions"):
         if st.session_state.conversation:
             latest_question = st.session_state.conversation[-2]['content'] if len(st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = generate_followups_assistant(latest_question, latest_answer, num_samples, max_words_followups, ASSISTANT_ID)
+            followup_questions = generate_assistant_followups(latest_question, latest_answer, num_samples, max_words_followups, ASSISTANT_ID)
             st.session_state.followup_questions = followup_questions
             st.write("Follow-up Questions:")
             for idx, question in enumerate(followup_questions):

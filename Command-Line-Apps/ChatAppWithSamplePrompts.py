@@ -2,7 +2,6 @@
 # This interacts with the OpenAI API to facilitate a conversation through the command
 # line. Users can ask questions, generate prompts, and get follow-up questions.
 
-
 import sys
 import os
 
@@ -41,12 +40,16 @@ while True:
         sys.exit(-1)
     elif user_prompt.strip().lower() == "generate":
         prompt_context = input("Enter the context for generating a prompt: ")
-        user_prompt = generate_sample_prompts(prompt_context, 25)
-        print("Generated prompt: " + user_prompt)
+        generated_prompts = generate_sample_prompts(prompt_context, 1, 25)
+        print("Generated Prompts:")
+        for idx, question in enumerate(generated_prompts, start=1):
+            print(f"{idx}. {question}")
+        user_prompt = generated_prompts[0]  # Select the first generated prompt
     else:
         system_prompt = input("Enter a potential system prompt or press enter to use the default: ")
         if not system_prompt.strip():
             system_prompt = "You are a very helpful assistant."
+
     response = ask_question(conversation, user_prompt, system_prompt)
     answer = response['reply']
     conversation = response['conversation']
@@ -54,5 +57,5 @@ while True:
 
     followup_qs = generate_followups(user_prompt, answer, 3, 25)
     print("Follow-up Questions:")
-    for idx, question in enumerate(followup_qs):
+    for idx, question in enumerate(followup_qs, start=1):
         print(f"{question}")

@@ -42,7 +42,7 @@ def ask_question(conversation, question, instructions, assistant_id=None):
     if assistant_id is not None:
         return __ask_assistant(conversation, question, instructions, assistant_id)
     else:
-        return __ask_openai(conversation, question, instructions)
+        return __ask_openai(conversation, instructions)
 
 
 def __ask_assistant(conversation, question, instructions, assistant_id):
@@ -96,13 +96,12 @@ def __ask_assistant(conversation, question, instructions, assistant_id):
         return {"reply": None, "conversation": conversation}
 
 
-def __ask_openai(conversation, question, instructions):
+def __ask_openai(conversation, instructions):
     """
     Private function to ask a question to the OpenAI Chat API.
 
     Args:
         conversation (list): The conversation history.
-        question (str): The question to ask.
         instructions (str): Instructions or system prompt for the chat.
 
     Returns:
@@ -120,7 +119,7 @@ def __ask_openai(conversation, question, instructions):
     return {"reply": answer, "conversation": conversation}
 
 
-def ask_question_assistant(conversation, question, instructions, assistant_id):
+def ask_assistant_question(conversation, question, instructions, assistant_id):
     """
     Asks a question to an OpenAI Assistant with a specified ID.
 
@@ -133,22 +132,27 @@ def ask_question_assistant(conversation, question, instructions, assistant_id):
     return ask_question(conversation, question, instructions, assistant_id)
 
 
-def generate_prompt(context, max_words, assistant_id=None):
+def generate_sample_prompts(context, num_samples, max_words, assistant_id=None, followups=None):
     """
     Generates a prompt based on the context.
 
     Args:
         context (str): The context for generating the prompt.
+        num_samples (int): Number of prompts to generate.
         max_words (int): Maximum number of words for the prompt.
         assistant_id (str): The ID of the existing assistant.
+        followups (bool): Whether the prompts are follow-up questions.
 
     Returns:
-        str: The generated prompt.
+        list: A list of generated prompts.
     """
-    instructions = f"Generate a prompt in no more than {max_words} words from the user perspective based on the context provided below."
+    if followups is not None:
+        instructions = f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."
+    else:
+        instructions = f"Generate {num_samples} sample prompts. Each sample prompt should be no more than {max_words} words from the user perspective based on the context provided below."
 
     if assistant_id is not None:
-        return __generate_prompt_assistant(context, max_words, instructions, assistant_id)
+        return __generate_assistant_prompts(context, instructions, assistant_id)
     else:
         response = client.chat.completions.create(model=settings["model"],
                                                   messages=[
@@ -157,22 +161,21 @@ def generate_prompt(context, max_words, assistant_id=None):
                                                   ])
         (dict(response).get('usage'))
         (response.model_dump_json(indent=2))
-        prompt = response.choices[0].message.content.strip()
-        return prompt
+        prompts = response.choices[0].message.content.strip().split('\n')
+        return prompts
 
 
-def __generate_prompt_assistant(context, max_words, instructions, assistant_id):
+def __generate_assistant_prompts(context, instructions, assistant_id):
     """
-    Private function to generate a prompt based on the context using an OpenAI Assistant.
+    Private function to generate prompts using an OpenAI Assistant.
 
     Args:
         context (str): The context for generating the prompt.
-        max_words (int): Maximum number of words for the prompt.
         instructions (str): Instructions or system prompt for the chat.
         assistant_id (str): The ID of the existing assistant.
 
     Returns:
-        str: The generated prompt.
+        list: A list of generated prompts.
     """
     # Create a new thread
     thread = client.beta.threads.create()
@@ -198,29 +201,26 @@ def __generate_prompt_assistant(context, max_words, instructions, assistant_id):
         )
 
         # Get the latest assistant message
-        prompt = None
+        prompts = []
         for message in messages.data:
             if message.role == "assistant":
-                prompt = message.content[0].text.value
-
-        if prompt:
-            return prompt
-        else:
-            return None
+                prompts = message.content[0].text.value.split('\n')
+        return prompts
     else:
-        return None
+        return []
 
 
-def generate_prompt_assistant(context, max_words, assistant_id):
+def generate_assistant_sample_prompts(context, num_samples, max_words, assistant_id):
     """
     Generates a prompt based on the OpenAI Assistant with a specified ID.
 
     Args:
         context (str): The context for generating the prompt.
+        num_samples (int): Number of prompts to generate.
         max_words (int): Maximum number of words for the prompt.
         assistant_id (str): The ID of the existing assistant.
     """
-    return generate_prompt(context, max_words, assistant_id)
+    return generate_sample_prompts(context, num_samples, max_words, assistant_id)
 
 
 def generate_followups(question, response, num_samples, max_words, assistant_id=None):
@@ -238,68 +238,10 @@ def generate_followups(question, response, num_samples, max_words, assistant_id=
         list: A list of follow-up questions.
     """
     recent_history = f"User: {question}\nAssistant: {response}\n"
-    instructions = f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."
-
-    if assistant_id is not None:
-        return __generate_followups_assistant(recent_history, instructions, assistant_id)
-    else:
-        followups = client.chat.completions.create(model=settings["model"],
-                                                   messages=[
-                                                       {"role": "system", "content": instructions},
-                                                       {"role": "user", "content": recent_history}
-                                                   ])
-        (dict(followups).get('usage'))
-        (followups.model_dump_json(indent=2))
-        followup_qs = followups.choices[0].message.content.strip().split('\n')
-        return followup_qs
+    return generate_sample_prompts(recent_history, num_samples, max_words, assistant_id, followups=True)
 
 
-def __generate_followups_assistant(recent_history, instructions, assistant_id):
-    """
-    Private function to generate follow-up questions using an OpenAI Assistant.
-
-    Args:
-        recent_history (str): The recent conversation history.
-        instructions (str): Instructions or system prompt for the chat.
-        assistant_id (str): The ID of the existing assistant.
-
-    Returns:
-        list: A list of follow-up questions.
-    """
-    # Create a new thread
-    thread = client.beta.threads.create()
-
-    # Add the user's question to the thread
-    client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=recent_history
-    )
-
-    # Run the assistant
-    run = client.beta.threads.runs.create_and_poll(
-        thread_id=thread.id,
-        assistant_id=assistant_id,
-        instructions=instructions
-    )
-
-    if run.status == 'completed':
-        # List all messages in the thread
-        messages = client.beta.threads.messages.list(
-            thread_id=thread.id
-        )
-
-        # Get the latest assistant message
-        followup_qs = []
-        for message in messages.data:
-            if message.role == "assistant":
-                followup_qs = message.content[0].text.value.split('\n')
-        return followup_qs
-    else:
-        return []
-
-
-def generate_followups_assistant(question, response, num_samples, max_words, assistant_id):
+def generate_assistant_followups(question, response, num_samples, max_words, assistant_id):
     """
     Generates follow-up questions based on the OpenAI Assistant with a specified ID.
 

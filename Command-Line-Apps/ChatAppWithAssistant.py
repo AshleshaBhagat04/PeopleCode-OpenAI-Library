@@ -18,7 +18,7 @@ ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
 
 
 def handle_followups(conversation, latest_question, latest_answer, system_prompt, num_samples, max_words):
-    followup_questions = generate_followups_assistant(latest_question, latest_answer, num_samples, max_words,
+    followup_questions = generate_assistant_followups(latest_question, latest_answer, num_samples, max_words,
                                                       ASSISTANT_ID)
     if followup_questions:
         print("Follow-up Questions:")
@@ -83,13 +83,17 @@ def main():
             # Generate a new prompt
             user_prompt = input("Enter the context for generating a prompt: ").strip()
             try:
+                # Get the number of follow-up questions and maximum words
+                num_samples = int(
+                    input(
+                        "Enter the number of sample prompts to generate or press enter to use the default: ").strip())
                 max_words = int(input(
                     "Enter the maximum number of words for the generated prompt or press enter to use the default: ").strip())
-                user_prompt = generate_prompt_assistant(user_prompt, max_words, ASSISTANT_ID)
+                user_prompt = generate_assistant_sample_prompts(user_prompt, num_samples, max_words, ASSISTANT_ID)
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Using default.")
-                user_prompt = generate_prompt_assistant(user_prompt, 25, ASSISTANT_ID)
+                user_prompt = generate_assistant_sample_prompts(user_prompt, 1, 25, ASSISTANT_ID)
                 print("Generated prompt: " + user_prompt)
         else:
             # Get system prompt or use default
