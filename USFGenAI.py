@@ -149,7 +149,7 @@ def generate_sample_prompts(context, num_samples, max_words, assistant_id=None, 
     if followups is not None:
         instructions = f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words."
     else:
-        instructions = f"Generate {num_samples} sample prompts. Each sample prompt should be no more than {max_words} words from the user perspective based on the context provided below."
+        instructions = f"Generate {num_samples} sample prompts from the user perspective based on the context. Each sample prompt should be no more than {max_words} words."
 
     if assistant_id is not None:
         return __generate_assistant_prompts(context, instructions, assistant_id)
