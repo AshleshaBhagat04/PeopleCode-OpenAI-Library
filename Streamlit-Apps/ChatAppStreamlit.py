@@ -13,6 +13,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from USFGenAI import *
+
 # Streamlit App
 st.title("ChatApp")
 
