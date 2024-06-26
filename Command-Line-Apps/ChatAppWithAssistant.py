@@ -1,7 +1,4 @@
 # ChatAppWithAssistant.py
-# This script initializes the OpenAI API key and sets up conversation through the command line. It interacts
-# with the user to select a model and ask questions based on the provided context. It handles model selection,
-# generates prompts, and manages follow-up questions.
 
 import sys
 import os
@@ -22,7 +19,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
                                                       ASSISTANT_ID)
     if followup_questions:
         print("Follow-up Questions:")
-        for idx, question in enumerate(followup_questions):
+        for idx, question in enumerate(followup_questions, start=1):
             print(f"{question}")
         choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
@@ -31,7 +28,7 @@ def handle_followups(conversation, latest_question, latest_answer, system_prompt
                 return latest_question, latest_answer, conversation
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
-                response = ask_question(conversation, user_prompt, system_prompt)
+                response = ask_assistant_question(conversation, user_prompt, system_prompt, ASSISTANT_ID)
                 latest_question = user_prompt
                 latest_answer = response['reply']
                 print("Response:\n" + latest_answer)
@@ -48,7 +45,7 @@ def main():
     model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
     print("Available models:")
     for idx, model in enumerate(model_options, start=1):
-        print(f"{idx}. {model}")
+        print(f"{model}")
 
     # Select model with default
     selected_model = model_options[0]
@@ -83,13 +80,31 @@ def main():
             # Generate a new prompt
             user_prompt = input("Enter the context for generating a prompt: ").strip()
             try:
-                # Get the number of follow-up questions and maximum words
-                num_samples = int(
-                    input(
-                        "Enter the number of sample prompts to generate or press enter to use the default: ").strip())
-                max_words = int(input(
-                    "Enter the maximum number of words for the generated prompt or press enter to use the default: ").strip())
-                user_prompt = generate_assistant_sample_prompts(user_prompt, num_samples, max_words, ASSISTANT_ID)
+                # Get the number of sample prompts and maximum words
+                num_samples_input = input("Enter the number of sample prompts to generate: ").strip()
+                num_samples = int(num_samples_input) if num_samples_input else 1
+
+                max_words_input = input("Enter the maximum number of words for the generated prompt: ").strip()
+                max_words = int(max_words_input) if max_words_input else 25
+
+                generated_prompts = generate_assistant_sample_prompts(user_prompt, num_samples, max_words, ASSISTANT_ID)
+                if isinstance(generated_prompts, list):
+                    print("Generated Prompts:")
+                    for idx, prompt in enumerate(generated_prompts, start=1):
+                        print(f"{prompt}")
+                    choice_idx_input = input("Choose a prompt number: ").strip()
+                    if choice_idx_input.isdigit():
+                        choice_idx = int(choice_idx_input) - 1
+                        if 0 <= choice_idx < len(generated_prompts):
+                            user_prompt = generated_prompts[choice_idx]
+                        else:
+                            print("Invalid choice, using the first prompt.")
+                            user_prompt = generated_prompts[0]
+                    else:
+                        print("Invalid input, using the first prompt.")
+                        user_prompt = generated_prompts[0]
+                else:
+                    user_prompt = generated_prompts
                 print("Generated prompt: " + user_prompt)
             except ValueError:
                 print("Using default.")
@@ -102,11 +117,13 @@ def main():
                 system_prompt = "You are a very helpful assistant."
         try:
             # Get the number of follow-up questions and maximum words
-            num_samples = int(
-                input(
-                    "Enter the number of follow-up questions to generate or press enter to use the default: ").strip())
-            max_words = int(input(
-                "Enter the maximum number of words for questions and prompts or press enter to use the default: ").strip())
+            num_samples_input = input(
+                "Enter the number of follow-up questions to generate or press enter to use the default: ").strip()
+            num_samples = int(num_samples_input) if num_samples_input else 3
+
+            max_words_input = input(
+                "Enter the maximum number of words for questions and prompts or press enter to use the default: ").strip()
+            max_words = int(max_words_input) if max_words_input else 25
         except ValueError:
             print("Using default.")
 
