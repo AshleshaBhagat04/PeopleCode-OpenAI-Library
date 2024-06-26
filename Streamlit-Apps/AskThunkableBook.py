@@ -43,7 +43,8 @@ user_prompt = st.text_input("Enter your prompt:", "")
 # Ask button
 if st.button("Ask"):
     if user_prompt:
-        response = ask_assistant_question(st.session_state.conversation, user_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = ask_assistant_question(st.session_state.conversation, user_prompt, st.session_state.instructions,
+                                          ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": user_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
@@ -64,7 +65,8 @@ with st.expander("Generate a Prompt"):
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
-        response = ask_assistant_question(st.session_state.conversation, st.session_state.generated_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = ask_assistant_question(st.session_state.conversation, st.session_state.generated_prompt,
+                                          st.session_state.instructions, ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
@@ -77,9 +79,11 @@ with st.expander("Generate Follow-up Questions"):
 
     if st.button("Generate Follow-ups"):
         if st.session_state.conversation:
-            latest_question = st.session_state.conversation[-2]['content'] if len(st.session_state.conversation) >= 2 else ""
+            latest_question = st.session_state.conversation[-2]['content'] if len(
+                st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = generate_assistant_followups(latest_question, latest_answer, num_samples, max_words_followups, ASSISTANT_ID)
+            followup_questions = generate_assistant_followups(latest_question, latest_answer, num_samples,
+                                                              max_words_followups, ASSISTANT_ID)
             st.session_state.followup_questions = followup_questions[:num_samples]  # Limit to the requested number
             st.write("Follow-up Questions:")
             for idx, question in enumerate(st.session_state.followup_questions):
@@ -105,9 +109,6 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
             st.session_state.followup_questions = None
 else:
     st.session_state.followup_questions = None
-
-
-
 
 # Display conversation history
 if st.button("Show Conversation History"):
