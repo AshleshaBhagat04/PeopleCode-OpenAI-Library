@@ -5,7 +5,13 @@
 import tempfile
 import streamlit as st
 import sys
-sys.path.append("..")
+import os
+
+# Add parent directory to sys.path to import USFGenAI module
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from streamlit_mic_recorder import mic_recorder
 from USFGenAI import *
 
