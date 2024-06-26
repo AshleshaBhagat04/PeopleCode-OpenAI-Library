@@ -44,7 +44,7 @@ while True:
         print("Generated Prompts:")
         for idx, question in enumerate(generated_prompts, start=1):
             print(f"{idx}. {question}")
-        user_prompt = generated_prompts[0]  # Select the first generated prompt
+        user_prompt = generated_prompts[0]
     else:
         system_prompt = input("Enter a potential system prompt or press enter to use the default: ")
         if not system_prompt.strip():
