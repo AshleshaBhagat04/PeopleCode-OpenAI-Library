@@ -24,7 +24,6 @@ model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
 set_model(selected_model)
 
-
 instructions = "You are a helpful assistant"
 
 
@@ -51,4 +50,3 @@ def callback():
 
 
 mic_recorder(key='my_recorder', callback=callback)
-

@@ -54,7 +54,7 @@ with st.expander("Generate a Prompt"):
 
     if st.button("Generate Prompt"):
         if context:
-            generated_prompt = generate_assistant_sample_prompts(context, max_words, ASSISTANT_ID)
+            generated_prompt = generate_assistant_sample_prompts(context, 1, max_words, ASSISTANT_ID)
             st.session_state.generated_prompt = generated_prompt
             st.text_area("Generated Prompt:", generated_prompt, height=100)
 

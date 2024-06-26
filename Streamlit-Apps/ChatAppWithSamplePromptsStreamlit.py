@@ -45,5 +45,5 @@ with st.expander("Generate a Prompt"):
     context = st.text_input("Enter the context for generating a prompt:")
     if st.button("Generate Prompt"):
         if context:
-            generated_prompt = generate_sample_prompts(context, 25)
+            generated_prompt = generate_sample_prompts(context, 1, 25)
             st.text_area("Generated Prompt:", generated_prompt)
