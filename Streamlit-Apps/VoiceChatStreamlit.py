@@ -5,13 +5,7 @@
 import tempfile
 import streamlit as st
 import sys
-import os
-
-# Add parent directory to sys.path to import USFGenAI module
-current_dir = os.path.dirname(__file__)
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
-
+sys.path.append("..")
 from streamlit_mic_recorder import mic_recorder
 from USFGenAI import *
 
@@ -23,6 +17,7 @@ st.title("Voice Chat")
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
 set_model(selected_model)
+
 
 instructions = "You are a helpful assistant"
 
