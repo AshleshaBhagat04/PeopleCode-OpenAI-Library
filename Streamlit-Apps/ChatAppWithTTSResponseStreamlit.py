@@ -6,7 +6,13 @@
 
 import streamlit as st
 import sys
-sys.path.append("..")
+import os
+
+# Add parent directory to sys.path to import USFGenAI module
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from USFGenAI import *
 
 # Streamlit App
@@ -51,9 +57,10 @@ with st.expander("Generate a Prompt"):
 
     if st.button("Generate Prompt"):
         if context:
-            generated_prompt = generate_sample_prompts(context, 1, max_words)
-            st.session_state.generated_prompt = generated_prompt
-            st.text_area("Generated Prompt:", generated_prompt, height=100)
+            generated_prompts = generate_sample_prompts(context, 1, max_words)
+            if generated_prompts:
+                st.session_state.generated_prompt = generated_prompts[0]
+                st.text_area("Generated Prompt:", st.session_state.generated_prompt, height=100)
 
 # Ask generated prompt button
 if st.session_state.generated_prompt:
@@ -63,7 +70,8 @@ if st.session_state.generated_prompt:
     if st.button("Ask Generated Prompt"):
         response = ask_question(st.session_state.conversation, st.session_state.generated_prompt,
                                 st.session_state.instructions)
-        st.session_state.conversation = response['conversation']
+        st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
+        st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
         speech_file_path = text_to_speech(response['reply'])
         st.audio(speech_file_path)
@@ -90,10 +98,13 @@ with st.expander("Generate Follow-up Questions"):
 
 # Select and ask follow-up question
 if 'followup_questions' in st.session_state and st.session_state.followup_questions:
-    followup_choice = st.selectbox("Select a follow-up question to ask:",
-                                   range(len(st.session_state.followup_questions)))
+    followup_choices = [f"Option {idx + 1}" for idx in range(len(st.session_state.followup_questions))]
+
+    followup_choice = st.selectbox("Select a follow-up question to ask:", followup_choices)
+
     if st.button("Ask Follow-up"):
-        selected_followup = st.session_state.followup_questions[followup_choice]
+        selected_idx = int(followup_choice.split()[1]) - 1
+        selected_followup = st.session_state.followup_questions[selected_idx]
         followup_response = ask_question(st.session_state.conversation, selected_followup,
                                          st.session_state.instructions)
         st.session_state.conversation = followup_response['conversation']
