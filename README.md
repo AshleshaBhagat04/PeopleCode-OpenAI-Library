@@ -19,12 +19,7 @@ The library comes with sample apps demonstrating the use of the library code:
 
 You need Python3 to run the samples and you’ll need Pip to install some Python packages. Generally Pip comes with your Python installation.
 
-1. Clone the GitHub repo into a local folder.
-   -- copy the GitHub URL from GitHub
-        
-        ![gitHubClone.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/ac3f184b-7cdf-43e6-8df9-0f57d29fbade/8313e752-3c25-4baa-b102-f650eb8da0a5/gitHubClone.png)
-        
-   -- Open a terminal and enter the following command to clone the app (% represents the linux prompt)
+1. Clone the GitHub repo into a local folder. Open a terminal and enter the following command to clone the app (% represents the linux prompt)
         
         % git clone https://github.com/People-Museum-Project/PeopleCode-OpenAI-Library.git
         
