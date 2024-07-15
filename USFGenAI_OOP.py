@@ -1,5 +1,4 @@
 import os
-from app.ai_handler import *
 from openai import OpenAI
 
 DEFAULT_MODEL = "gpt-3.5-turbo"
@@ -9,7 +8,7 @@ DEFAULT_MODEL = "gpt-3.5-turbo"
 TODO:
 if assistant for this person exists:
 1. retrieve the ass_id from db
-2. continue to send questions to openAI
+2. continue to send questions to openAI 
 
 if assistant for this person not exist:
 1. create Assistant(conversation) for each person
@@ -21,22 +20,22 @@ history auto managed by this assistant
 """
 
 
-class Assistant:
+class OpenAIClient:
     # each assistant must belong to a person_id
-    def __init__(self, person_id):
+    def __init__(self):
         self.__api_key = os.getenv('OPENAI_API_KEY')
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         self.__client = OpenAI(api_key=self.__api_key)
         self.__settings = {"model": DEFAULT_MODEL}
-        self.__person_id = person_id
-
-        # try to retrieve the previous conversation
-        self.__assistant_id = get_assistant(self.__person_id)
-
-        if not self.__assistant_id:
-            # get context and send to chat
-            pass
+        # self.__person_id = person_id
+        #
+        # # try to retrieve the previous conversation
+        # self.__assistant_id = get_assistant(self.__person_id)
+        #
+        # if not self.__assistant_id:
+        #     # get context and send to chat
+        #     pass
 
 
 
@@ -55,12 +54,15 @@ class Assistant:
         """
         self.__settings['model'] = model_name
 
-    def ask_question(self, question):
+    def ask_question(self, conversation, question, instructions, assistant_id=None):
         """
         Asks a question to the OpenAI Chat API.
 
         Args:
+            conversation (list): The conversation history.
             question (str): The question to ask.
+            instructions (str): Instructions or system prompt for the chat.
+            assistant_id (str): The ID of the existing assistant.
 
         Returns:
             dict: The response from the OpenAI Chat API,
@@ -106,7 +108,7 @@ class Assistant:
         if assistant_id is not None:
             return self.__generate_assistant_prompts(context, instructions, assistant_id)
         else:
-            response = self.client.chat.completions.create(model=self.__settings["model"], messages=[
+            response = self.__client.chat.completions.create(model=self.__settings["model"], messages=[
                                                           {"role": "system", "content": instructions},
                                                           {"role": "user", "content": context}
                                                       ])
@@ -160,7 +162,7 @@ class Assistant:
         """
         return self.generate_followups(question, response, num_samples, max_words, assistant_id)
 
-    def __ask_assistant(self, question):
+    def __ask_assistant(self, conversation, question, instructions, assistant_id):
         """
         Private function to ask a question to an OpenAI Assistant with a specified ID.
 
@@ -331,8 +333,13 @@ class Assistant:
 
 
 if __name__ == "__main__":
+    openai_client = OpenAIClient()
+    openai_client.set_model("gpt-3.5-turbo")
 
-    assistant = Assistant(1)
-    res = g.ask_question([], "",
-                            "what exactly are these means, and under what scenario should we use it")
-    print(res)
+    conversation = []
+    response = openai_client.ask_question(conversation, "What is the capital of France?",
+                                          "You are a helpful assistant.")
+    print(response["reply"])
+
+    prompts = openai_client.generate_sample_prompts("Tell me about climate change", 3, 10)
+    print(prompts)
