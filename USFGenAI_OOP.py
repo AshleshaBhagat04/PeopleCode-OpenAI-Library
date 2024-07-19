@@ -1,42 +1,27 @@
 import os
+from pathlib import Path
+
+from app.ai_handler import *
 from openai import OpenAI
 
 DEFAULT_MODEL = "gpt-3.5-turbo"
 
 
-"""
-TODO:
-if assistant for this person exists:
-1. retrieve the ass_id from db
-2. continue to send questions to openAI 
-
-if assistant for this person not exist:
-1. create Assistant(conversation) for each person
-2. store the assistant_id into datastore
-3. send the context and question to openAI
-4. generate follow up questions to update the frontend choices.
-
-history auto managed by this assistant
-"""
-
-
-class OpenAIClient:
+class Assistant:
     # each assistant must belong to a person_id
-    def __init__(self):
+    def __init__(self, person_id):
         self.__api_key = os.getenv('OPENAI_API_KEY')
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         self.__client = OpenAI(api_key=self.__api_key)
         self.__settings = {"model": DEFAULT_MODEL}
-        # self.__person_id = person_id
-        #
-        # # try to retrieve the previous conversation
-        # self.__assistant_id = get_assistant(self.__person_id)
-        #
-        # if not self.__assistant_id:
-        #     # get context and send to chat
-        #     pass
+        self.__person_id = person_id
 
+        # try to retrieve the previous conversation
+        self.__assistant_id = get_assistant(self.__person_id)
+        if not self.__assistant_id:
+            # get context and send to chat
+            pass
 
 
     def __set_context(self):
@@ -72,7 +57,22 @@ class OpenAIClient:
         if assistant_id is not None:
             return self.__ask_assistant(conversation, question, instructions, assistant_id)
         else:
-            return self.__ask_openai(conversation, instructions)
+            return self.__ask_openai(conversation, instructions, question)
+        # # Ensure the instructions are the first message
+        # messages = [{"role": "system", "content": instructions}] + conversation
+        # messages.append({"role": "user", "content": question})
+        #
+        # # Make the API call
+        # response = self.__client.chat.completions.create(
+        #     model=self.__settings["model"],
+        #     messages=messages
+        # )
+        #
+        # # Extract the answer from the response
+        # answer = response.choices[0].message.content.strip()
+        # conversation.append({"role": "assistant", "content": answer})
+        #
+        # return {"reply": answer, "conversation": conversation}
 
     def ask_assistant_question(self, conversation, question, instructions, assistant_id):
         """
@@ -218,7 +218,7 @@ class OpenAIClient:
         else:
             return {"reply": None, "conversation": conversation}
 
-    def __ask_openai(self, conversation, instructions):
+    def __ask_openai(self, conversation, instructions, question):
         """
         Private function to ask a question to the OpenAI Chat API.
 
@@ -230,14 +230,19 @@ class OpenAIClient:
             dict: The response from the OpenAI Chat API,
                   containing the reply and updated conversation.
         """
-        response = self.__client.chat.completions.create(model=self.__settings["model"],
-                                                  messages=[
-                                                               {"role": "system", "content": instructions}
-                                                           ] + conversation)
-        (dict(response).get('usage'))
-        (response.model_dump_json(indent=2))
+        messages = [{"role": "system", "content": instructions}] + conversation
+        messages.append({"role": "user", "content": question})
+
+        # Make the API call
+        response = self.__client.chat.completions.create(
+            model=self.__settings["model"],
+            messages=messages
+        )
+
+        # Extract the answer from the response
         answer = response.choices[0].message.content.strip()
         conversation.append({"role": "assistant", "content": answer})
+
         return {"reply": answer, "conversation": conversation}
 
     def __generate_assistant_prompts(self, context, instructions, assistant_id):
@@ -285,61 +290,56 @@ class OpenAIClient:
             return []
 
 
+    def text_to_speech(self, text, voice=None):
+        """
+        Converts text to speech using OpenAI's TTS model.
 
-# def text_to_speech(text, voice=None):
-#     """
-#     Converts text to speech using OpenAI's TTS model.
-#
-#     Args:
-#         text (str): The text to convert to speech.
-#         voice: The voice to use.
-#
-#     Returns:
-#         object: The response object from OpenAI audio API.
-#     """
-#     if not voice:
-#         voice = "alloy"
-#     try:
-#         speech_file_path = Path(__file__).parent / "speech.mp3"
-#         response = client.audio.speech.create(
-#             model="tts-1",
-#             voice=voice,
-#             input=text
-#         )
-#         response.stream_to_file(speech_file_path)
-#         return response.content
-#     except Exception as e:
-#         print(f"Error converting text to speech: {e}")
-#         return None
-#
-#
-# def speech_recognition(file):
-#     """
-#     Converts speech to text using OpenAI's Whisper model.
-#
-#     Args:
-#         file (str): Path to the audio file.
-#
-#     Returns:
-#         str: The transcribed text.
-#     """
-#     with open(file, "rb") as audio_file:
-#         translation = client.audio.translations.create(
-#             model="whisper-1",
-#             file=audio_file
-#         )
-#     return translation.text
+        Args:
+            text (str): The text to convert to speech.
+            voice: The voice to use.
+
+        Returns:
+            object: The response object from OpenAI audio API.
+        """
+        if not voice:
+            voice = "alloy"
+        try:
+            speech_file_path = Path(__file__).parent / "speech.mp3"
+            response = self.__client.audio.speech.create(
+                model="tts-1",
+                voice=voice,
+                input=text
+            )
+            response.stream_to_file(speech_file_path)
+            return response.content
+        except Exception as e:
+            print(f"Error converting text to speech: {e}")
+            return None
+
+
+    def speech_recognition(self, file):
+        """
+        Converts speech to text using OpenAI's Whisper model.
+
+        Args:
+            file (str): Path to the audio file.
+
+        Returns:
+            str: The transcribed text.
+        """
+        with open(file, "rb") as audio_file:
+            translation = self.__client.audio.translations.create(
+                model="whisper-1",
+                file=audio_file
+            )
+        return translation.text
 
 
 
 if __name__ == "__main__":
-    openai_client = OpenAIClient()
-    openai_client.set_model("gpt-3.5-turbo")
+    assistant = Assistant(1)
+    res = assistant.ask_question([], "What is the capital of France?", "You are a helpful assistant.")
+    print(res['reply'])
 
-    conversation = []
-    response = openai_client.ask_question(conversation, "What is the capital of France?",
-                                          "You are a helpful assistant.")
-    print(response["reply"])
-
-    prompts = openai_client.generate_sample_prompts("Tell me about climate change", 3, 10)
+    prompts = assistant.generate_sample_prompts("Tell me about climate change", 3, 10)
     print(prompts)
