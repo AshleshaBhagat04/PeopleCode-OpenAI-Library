@@ -30,9 +30,8 @@ You need Python3 to run the samples and you’ll need Pip to install some Python
 4. Get an OpenAI/API key and set it in your env variables.
    -- Here is a [video](https://youtu.be/RwVHrUhY_DQ) on getting a key
    -- In the terminal run the following command:
-    % export OPENAI_API_KEY="your-api-key”
         
-        or $env:OPENAI_API_KEY="your-api-key”
+         % export OPENAI_API_KEY="your-api-key” or $env:OPENAI_API_KEY="your-api-key”
         
 
 ### Command-line apps
