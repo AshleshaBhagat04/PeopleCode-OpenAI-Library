@@ -9,16 +9,15 @@ sys.path.append(parent_dir)
 
 from PeopleCodeOpenAITest import OpenAI_Conversation
 
-# Initialize the assistant with a person_id (you can use a dummy ID for now)
 person_id = "example_person_id"
-assistant = OpenAI_Conversation(person_id)
+opeanai_conversation = OpenAI_Conversation(person_id)
 
 st.title("Simple Q&A")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
-assistant.set_model(selected_model)
+opeanai_conversation.set_model(selected_model)
 
 user_prompt = st.text_input("Enter a prompt:")
 
@@ -29,7 +28,7 @@ if st.button("Ask"):
         if 'conversation' not in st.session_state:
             st.session_state.conversation = []
 
-        response = assistant.ask_question(st.session_state.conversation, user_prompt, "You are a helpful assistant.")
+        response = opeanai_conversation.ask_question(st.session_state.conversation, user_prompt, "You are a helpful assistant.")
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
     except Exception as e:
