@@ -4,27 +4,28 @@ from pathlib import Path
 # from app.ai_handler import *
 from openai import OpenAI
 
-DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4"
 
 
 class OpenAI_Conversation:
-    # each assistant must belong to a person_id
-    def __init__(self, person_id):
-        self.__api_key = os.getenv('OPENAI_API_KEY')
+    def __init__(self, api_key, person_id, model=DEFAULT_MODEL, assistant=None):
+        self.__api_key = api_key
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         self.__client = OpenAI(api_key=self.__api_key)
-        self.__settings = {"model": DEFAULT_MODEL}
+        self.__model = model
+        self.__assistant = assistant
+        self.__prevConversation = []
         self.__person_id = person_id
 
-        # try to retrieve the previous conversation
+        # Try to retrieve the previous conversation
         # self.__assistant_id = get_assistant(self.__person_id)
         # if not self.__assistant_id:
-            # get context and send to chat
-        #    pass
+        #     # Get context and send to chat
+        #     pass
 
     def __set_context(self):
-        # telling the AI the incoming conversation is based on this context
+        # Telling the AI the incoming conversation is based on this context
         # ask_xxx(context)
         pass
 
@@ -36,54 +37,36 @@ class OpenAI_Conversation:
         Args:
             model_name (str): The model name.
         """
-        self.__settings['model'] = model_name
+        self.__model = model_name
 
-    def ask_question(self, conversation, question, instructions, assistant_id=None):
+    def ask_question(self, instructions, question, includePrevConvo=True):
         """
         Asks a question to the OpenAI Chat API.
 
         Args:
-            conversation (list): The conversation history.
-            question (str): The question to ask.
             instructions (str): Instructions or system prompt for the chat.
-            assistant_id (str): The ID of the existing assistant.
+            question (str): The question to ask.
+            includePrevConvo (bool): Whether to include previous conversation in the request.
 
         Returns:
             dict: The response from the OpenAI Chat API,
                   containing the reply and updated conversation.
         """
-
-        if assistant_id is not None:
-            return self.__ask_assistant(conversation, question, instructions, assistant_id)
+        if includePrevConvo:
+            messages = [{"role": "system", "content": instructions}] + self.__prevConversation
         else:
-            return self.__ask_openai(conversation, instructions, question)
-        # # Ensure the instructions are the first message
-        # messages = [{"role": "system", "content": instructions}] + conversation
-        # messages.append({"role": "user", "content": question})
-        #
-        # # Make the API call
-        # response = self.__client.chat.completions.create(
-        #     model=self.__settings["model"],
-        #     messages=messages
-        # )
-        #
-        # # Extract the answer from the response
-        # answer = response.choices[0].message.content.strip()
-        # conversation.append({"role": "assistant", "content": answer})
-        #
-        # return {"reply": answer, "conversation": conversation}
+            messages = [{"role": "system", "content": instructions}]
+        messages.append({"role": "user", "content": question})
 
-    def ask_assistant_question(self, conversation, question, instructions, assistant_id):
-        """
-        Asks a question to an OpenAI Assistant with a specified ID.
+        response = self.__client.chat.completions.create(
+            model=self.__model,
+            messages=messages
+        )
 
-        Args:
-            question (str): The question to ask.
-            instructions (str): Instructions or system prompt for the chat.
-            conversation (list): The conversation history.
-            assistant_id (str): The ID of the existing assistant.
-        """
-        return self.ask_question(conversation, question, instructions, assistant_id)
+        answer = response.choices[0].message.content.strip()
+        self.__prevConversation.append({"role": "assistant", "content": answer})
+
+        return {"reply": answer, "conversation": self.__prevConversation}
 
     def generate_sample_prompts(self, context, num_samples, max_words, assistant_id=None, followups=None):
         """
@@ -107,12 +90,13 @@ class OpenAI_Conversation:
         if assistant_id is not None:
             return self.__generate_assistant_prompts(context, instructions, assistant_id)
         else:
-            response = self.__client.chat.completions.create(model=self.__settings["model"], messages=[
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": context}
-            ])
-            (dict(response).get('usage'))
-            (response.model_dump_json(indent=2))
+            response = self.__client.chat.completions.create(
+                model=self.__model,
+                messages=[
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": context}
+                ]
+            )
             prompts = response.choices[0].message.content.strip().split('\n')
             return prompts
 
@@ -235,7 +219,7 @@ class OpenAI_Conversation:
 
         # Make the API call
         response = self.__client.chat.completions.create(
-            model=self.__settings["model"],
+            model=self.__model,
             messages=messages
         )
 

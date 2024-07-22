@@ -9,8 +9,9 @@ sys.path.append(parent_dir)
 
 from PeopleCodeOpenAITest import OpenAI_Conversation
 
-person_id = "example_person_id"
-opeanai_conversation = OpenAI_Conversation(person_id)
+# Initialize the conversation instance
+api_key = os.getenv('OPENAI_API_KEY')
+opeanai_conversation = OpenAI_Conversation(api_key=api_key, person_id=0, model="gpt-4", assistant=None)
 
 st.title("Simple Q&A")
 
@@ -25,10 +26,15 @@ if st.button("Ask"):
     if user_prompt.strip().lower() == "exit":
         st.stop()
     try:
+        # Initialize conversation history if not present
         if 'conversation' not in st.session_state:
             st.session_state.conversation = []
 
-        response = opeanai_conversation.ask_question(st.session_state.conversation, user_prompt, "You are a helpful assistant.")
+        response = opeanai_conversation.ask_question(
+            instructions="You are a helpful assistant.",
+            question=user_prompt,
+            includePrevConvo=True
+        )
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)
     except Exception as e:
