@@ -1,6 +1,4 @@
 import os
-from pathlib import Path
-
 from app.ai_handler import *
 from openai import OpenAI
 
@@ -9,20 +7,12 @@ DEFAULT_MODEL = "gpt-3.5-turbo"
 
 class Assistant:
     # each assistant must belong to a person_id
-    def __init__(self, person_id):
+    def __init__(self):
         self.__api_key = os.getenv('OPENAI_API_KEY')
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
         self.__client = OpenAI(api_key=self.__api_key)
         self.__settings = {"model": DEFAULT_MODEL}
-        self.__person_id = person_id
-
-        # try to retrieve the previous conversation
-        self.__assistant_id = get_assistant(self.__person_id)
-        if not self.__assistant_id:
-            # get context and send to chat
-            pass
-
 
     def __set_context(self):
         # telling the AI the incoming conversation is based on this context
@@ -38,6 +28,15 @@ class Assistant:
             model_name (str): The model name.
         """
         self.__settings['model'] = model_name
+
+    def __create_assistant(self):
+        assistant = self.__client.beta.assistants.create(
+            name="Math Tutor",
+            instructions="You are a personal math tutor. Write and run code to answer math questions.",
+            tools=[{"type": "code_interpreter"}],
+            model="gpt-4o",
+        )
+        return assistant
 
     def ask_question(self, conversation, question, instructions, assistant_id=None):
         """
@@ -58,21 +57,6 @@ class Assistant:
             return self.__ask_assistant(conversation, question, instructions, assistant_id)
         else:
             return self.__ask_openai(conversation, instructions, question)
-        # # Ensure the instructions are the first message
-        # messages = [{"role": "system", "content": instructions}] + conversation
-        # messages.append({"role": "user", "content": question})
-        #
-        # # Make the API call
-        # response = self.__client.chat.completions.create(
-        #     model=self.__settings["model"],
-        #     messages=messages
-        # )
-        #
-        # # Extract the answer from the response
-        # answer = response.choices[0].message.content.strip()
-        # conversation.append({"role": "assistant", "content": answer})
-        #
-        # return {"reply": answer, "conversation": conversation}
 
     def ask_assistant_question(self, conversation, question, instructions, assistant_id):
         """
@@ -109,9 +93,9 @@ class Assistant:
             return self.__generate_assistant_prompts(context, instructions, assistant_id)
         else:
             response = self.__client.chat.completions.create(model=self.__settings["model"], messages=[
-                                                          {"role": "system", "content": instructions},
-                                                          {"role": "user", "content": context}
-                                                      ])
+                {"role": "system", "content": instructions},
+                {"role": "user", "content": context}
+            ])
             (dict(response).get('usage'))
             (response.model_dump_json(indent=2))
             prompts = response.choices[0].message.content.strip().split('\n')
@@ -208,7 +192,8 @@ class Assistant:
                     for index, annotation in enumerate(annotations):
                         if file_citation := getattr(annotation, "file_citation", None):
                             cited_file = self.__client.files.retrieve(file_citation.file_id)
-                            latest_message = latest_message.replace(annotation.text, f"[{index}]({cited_file.filename})")
+                            latest_message = latest_message.replace(annotation.text,
+                                                                    f"[{index}]({cited_file.filename})")
                             latest_message += f"\n[{index}] {cited_file.filename}"
 
             if latest_message:
@@ -289,7 +274,6 @@ class Assistant:
         else:
             return []
 
-
     def text_to_speech(self, text, voice=None):
         """
         Converts text to speech using OpenAI's TTS model.
@@ -316,7 +300,6 @@ class Assistant:
             print(f"Error converting text to speech: {e}")
             return None
 
-
     def speech_recognition(self, file):
         """
         Converts speech to text using OpenAI's Whisper model.
@@ -333,7 +316,6 @@ class Assistant:
                 file=audio_file
             )
         return translation.text
-
 
 
 if __name__ == "__main__":
