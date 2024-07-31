@@ -1,7 +1,5 @@
 import os
 from pathlib import Path
-
-# from app.ai_handler import *
 from openai import OpenAI
 
 DEFAULT_MODEL = "gpt-4"
@@ -26,18 +24,34 @@ class OpenAI_Conversation:
 
     def __set_context(self):
         # Telling the AI the incoming conversation is based on this context
-        # ask_xxx(context)
         pass
 
     def set_model(self, model_name):
         """
         Sets the model for the OpenAI API.
-        model_options: ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 
         Args:
             model_name (str): The model name.
         """
         self.__model = model_name
+
+    def set_assistant(self, assistant):
+        """
+        Sets the assistant for the conversation.
+
+        Args:
+            assistant (str): The assistant ID or description.
+        """
+        self.__assistant = assistant
+
+    def get_conversation(self):
+        """
+        Returns the previous conversation history.
+
+        Returns:
+            list: The conversation history.
+        """
+        return self.__prevConversation
 
     def ask_question(self, instructions, question, includePrevConvo=True):
         """
@@ -82,10 +96,12 @@ class OpenAI_Conversation:
         Returns:
             list: A list of generated prompts.
         """
-        if followups is not None:
-            instructions = f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. Each follow-up question should be no more than {max_words} words. Only provide the prompts in the response"
-        else:
-            instructions = f"Generate {num_samples} sample prompts from the user perspective based on the context. Each sample prompt should be no more than {max_words} words. Only provide the questions in the response."
+        instructions = (
+            f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. "
+            f"Each follow-up question should be no more than {max_words} words. Only provide the prompts in the response."
+            if followups else
+            f"Generate {num_samples} sample prompts from the user perspective based on the context. "
+            f"Each sample prompt should be no more than {max_words} words. Only provide the questions in the response.")
 
         if assistant_id is not None:
             return self.__generate_assistant_prompts(context, instructions, assistant_id)
@@ -109,6 +125,9 @@ class OpenAI_Conversation:
             num_samples (int): Number of prompts to generate.
             max_words (int): Maximum number of words for the prompt.
             assistant_id (str): The ID of the existing assistant.
+
+        Returns:
+            list: A list of generated prompts.
         """
         return self.generate_sample_prompts(context, num_samples, max_words, assistant_id)
 
