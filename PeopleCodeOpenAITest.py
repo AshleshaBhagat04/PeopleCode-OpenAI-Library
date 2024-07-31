@@ -6,7 +6,7 @@ DEFAULT_MODEL = "gpt-4"
 
 
 class OpenAI_Conversation:
-    def __init__(self, api_key, person_id, model=DEFAULT_MODEL, assistant=None):
+    def __init__(self, api_key, model=DEFAULT_MODEL, assistant=None):
         self.__api_key = api_key
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
@@ -14,13 +14,6 @@ class OpenAI_Conversation:
         self.__model = model
         self.__assistant = assistant
         self.__prevConversation = []
-        self.__person_id = person_id
-
-        # Try to retrieve the previous conversation
-        # self.__assistant_id = get_assistant(self.__person_id)
-        # if not self.__assistant_id:
-        #     # Get context and send to chat
-        #     pass
 
     def __set_context(self):
         # Telling the AI the incoming conversation is based on this context
@@ -35,21 +28,21 @@ class OpenAI_Conversation:
         """
         self.__model = model_name
 
-    def set_assistant(self, assistant):
+    def set_assistant(self, assistant_name):
         """
-        Sets the assistant for the conversation.
+        Sets the assistant name or description for context in the conversation.
 
         Args:
-            assistant (str): The assistant ID or description.
+            assistant_name (str): The assistant's name or description.
         """
-        self.__assistant = assistant
+        self.__assistant = assistant_name
 
     def get_conversation(self):
         """
-        Returns the previous conversation history.
+        Returns the conversation history.
 
         Returns:
-            list: The conversation history.
+            list: The previous conversation history.
         """
         return self.__prevConversation
 

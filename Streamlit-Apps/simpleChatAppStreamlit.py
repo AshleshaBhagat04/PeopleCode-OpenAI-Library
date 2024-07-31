@@ -11,7 +11,7 @@ from PeopleCodeOpenAITest import OpenAI_Conversation
 
 # Initialize the conversation instance
 api_key = os.getenv('OPENAI_API_KEY')
-opeanai_conversation = OpenAI_Conversation(api_key=api_key, person_id=0, model="gpt-4", assistant=None)
+opeanai_conversation = OpenAI_Conversation(api_key=api_key, model="gpt-4")
 
 st.title("Simple Q&A")
 
