@@ -3,10 +3,11 @@ from pathlib import Path
 from openai import OpenAI
 
 DEFAULT_MODEL = "gpt-4"
+DEFAULT_TEMPERATURE = 0.7
 
 
 class OpenAI_Conversation:
-    def __init__(self, api_key, model=DEFAULT_MODEL, assistant=None):
+    def __init__(self, api_key, model=DEFAULT_MODEL, assistant=None, temperature=DEFAULT_TEMPERATURE):
         self.__api_key = api_key
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
@@ -14,6 +15,7 @@ class OpenAI_Conversation:
         self.__model = model
         self.__assistant = assistant
         self.__prevConversation = []
+        self.__temperature = temperature
 
     def __set_context(self):
         # Telling the AI the incoming conversation is based on this context
@@ -36,6 +38,18 @@ class OpenAI_Conversation:
             assistant_name (str): The assistant's name or description.
         """
         self.__assistant = assistant_name
+
+    def set_temperature(self, temperature):
+        """
+        Sets the temperature for the OpenAI API.
+
+        Args:
+            temperature (float): The temperature setting (between 0 and 1).
+        """
+        if 0 <= temperature <= 1:
+            self.__temperature = temperature
+        else:
+            raise ValueError("Temperature must be between 0 and 1.")
 
     def get_conversation(self):
         """
@@ -67,7 +81,8 @@ class OpenAI_Conversation:
 
         response = self.__client.chat.completions.create(
             model=self.__model,
-            messages=messages
+            messages=messages,
+            temperature=self.__temperature
         )
 
         answer = response.choices[0].message.content.strip()
@@ -104,7 +119,8 @@ class OpenAI_Conversation:
                 messages=[
                     {"role": "system", "content": instructions},
                     {"role": "user", "content": context}
-                ]
+                ],
+                temperature=self.__temperature
             )
             prompts = response.choices[0].message.content.strip().split('\n')
             return prompts
@@ -232,7 +248,8 @@ class OpenAI_Conversation:
         # Make the API call
         response = self.__client.chat.completions.create(
             model=self.__model,
-            messages=messages
+            messages=messages,
+            temperature=self.__temperature
         )
 
         # Extract the answer from the response
