@@ -6,13 +6,13 @@ import tempfile
 import streamlit as st
 import sys
 import os
-from pathlib import Path
 
 # Add parent directory to sys.path to import USFGenAI module
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from streamlit_mic_recorder import mic_recorder
 from PeopleCodeOpenAI import OpenAI_Conversation
 
 # Initialize OpenAI_Conversation
@@ -28,6 +28,7 @@ selected_model = st.selectbox("Select the model to use:", model_options)
 conversation_manager.set_model(selected_model)
 
 instructions = "You are a helpful assistant"
+
 
 def callback():
     if st.session_state.my_recorder_output:
@@ -50,6 +51,5 @@ def callback():
             # Clean up the temporary file
             os.remove(temp_audio_file_path)
 
-# Initialize the mic_recorder
-from streamlit_mic_recorder import mic_recorder
+
 mic_recorder(key='my_recorder', callback=callback)

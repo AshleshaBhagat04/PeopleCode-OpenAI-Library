@@ -66,11 +66,13 @@ model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
 conversation_instance.set_model(selected_model)
 
+
 def generate_initial_prompts():
     prompt1 = conversation_instance.generate_sample_prompts(context, 1, 25)
     prompt2 = conversation_instance.generate_sample_prompts(context, 1, 25)
     prompt3 = conversation_instance.generate_sample_prompts(context, 1, 25)
     st.session_state.prompts = [prompt1[0], prompt2[0], prompt3[0]]
+
 
 if not st.session_state.prompts:
     generate_initial_prompts()
@@ -101,6 +103,7 @@ with col2:
         generate_initial_prompts()
         st.experimental_rerun()
 
+
 def update_conversation(prompt):
     response = conversation_instance.ask_question(system_prompt, prompt, includePrevConvo=True)
     st.session_state.latest_question = prompt
@@ -110,6 +113,7 @@ def update_conversation(prompt):
         st.session_state.latest_question, st.session_state.latest_answer, 3, 25)
     st.session_state.user_prompt = prompt
     st.experimental_rerun()
+
 
 if ask_selected:
     st.session_state.user_prompt = choice
