@@ -173,6 +173,49 @@ class OpenAI_Conversation:
         """
         return self.generate_followups(question, response, num_samples, max_words, assistant_id)
 
+    def text_to_speech(self, text, voice=None):
+        """
+        Converts text to speech using OpenAI's TTS model.
+
+        Args:
+            text (str): The text to convert to speech.
+            voice: The voice to use.
+
+        Returns:
+            object: The response object from OpenAI audio API.
+        """
+        if not voice:
+            voice = "alloy"
+        try:
+            speech_file_path = Path(__file__).parent / "speech.mp3"
+            response = self.__client.audio.speech.create(
+                model="tts-1",
+                voice=voice,
+                input=text
+            )
+            response.stream_to_file(speech_file_path)
+            return response.content
+        except Exception as e:
+            print(f"Error converting text to speech: {e}")
+            return None
+
+    def speech_recognition(self, file):
+        """
+        Converts speech to text using OpenAI's Whisper model.
+
+        Args:
+            file (str): Path to the audio file.
+
+        Returns:
+            str: The transcribed text.
+        """
+        with open(file, "rb") as audio_file:
+            translation = self.__client.audio.translations.create(
+                model="whisper-1",
+                file=audio_file
+            )
+        return translation.text
+
     def __ask_assistant(self, conversation, question, instructions, assistant_id):
         """
         Private function to ask a question to an OpenAI Assistant with a specified ID.
@@ -301,46 +344,3 @@ class OpenAI_Conversation:
             return prompts
         else:
             return []
-
-    def text_to_speech(self, text, voice=None):
-        """
-        Converts text to speech using OpenAI's TTS model.
-
-        Args:
-            text (str): The text to convert to speech.
-            voice: The voice to use.
-
-        Returns:
-            object: The response object from OpenAI audio API.
-        """
-        if not voice:
-            voice = "alloy"
-        try:
-            speech_file_path = Path(__file__).parent / "speech.mp3"
-            response = self.__client.audio.speech.create(
-                model="tts-1",
-                voice=voice,
-                input=text
-            )
-            response.stream_to_file(speech_file_path)
-            return response.content
-        except Exception as e:
-            print(f"Error converting text to speech: {e}")
-            return None
-
-    def speech_recognition(self, file):
-        """
-        Converts speech to text using OpenAI's Whisper model.
-
-        Args:
-            file (str): Path to the audio file.
-
-        Returns:
-            str: The transcribed text.
-        """
-        with open(file, "rb") as audio_file:
-            translation = self.__client.audio.translations.create(
-                model="whisper-1",
-                file=audio_file
-            )
-        return translation.text
