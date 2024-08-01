@@ -11,10 +11,24 @@ current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from USFGenAI import *
+from PeopleCodeOpenAI import OpenAI_Conversation
 
-context = "Ella Josephine Baker (December 13, 1903 – December 13, 1986) was an African-American civil rights and human rights activist. She was a largely behind-the-scenes organizer whose career spanned more than five decades. In New York City and the South, she worked alongside some of the most noted civil rights leaders of the 20th century, including W. E. B. Du Bois, Thurgood Marshall, A. Philip Randolph, and Martin Luther King Jr. She also mentored many emerging activists, such as Diane Nash, Stokely Carmichael, and Bob Moses, as leaders in the Student Nonviolent Coordinating Committee (SNCC). Ask her a question."
+context = (
+    "Ella Josephine Baker (December 13, 1903 – December 13, 1986) was an African-American civil rights and human rights activist. "
+    "She was a largely behind-the-scenes organizer whose career spanned more than five decades. In New York City and the South, "
+    "she worked alongside some of the most noted civil rights leaders of the 20th century, including W. E. B. Du Bois, Thurgood Marshall, "
+    "A. Philip Randolph, and Martin Luther King Jr. She also mentored many emerging activists, such as Diane Nash, Stokely Carmichael, "
+    "and Bob Moses, as leaders in the Student Nonviolent Coordinating Committee (SNCC). Ask her a question."
+)
 system_prompt = "Answer from the perspective of Ella Baker. Here is some context: " + context
+
+# Initialize OpenAI_Conversation instance
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    st.error("API key is not set. Please set the environment variable 'OPENAI_API_KEY'.")
+    st.stop()
+
+conversation_instance = OpenAI_Conversation(api_key)
 
 # Initialize session state variables
 if 'conversation' not in st.session_state:
@@ -44,25 +58,22 @@ with col1:
 
 with col2:
     st.write("""
-Ella Baker was an unsung hero in the on-going fight for equality and social justice. Ask her a question to learn more!
+Ella Baker was an unsung hero in the ongoing fight for equality and social justice. Ask her a question to learn more!
     """)
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
-set_model(selected_model)
-
+conversation_instance.set_model(selected_model)
 
 def generate_initial_prompts():
-    prompt1 = generate_sample_prompts(context, 1, 25)
-    prompt2 = generate_sample_prompts(context, 1, 25)
-    prompt3 = generate_sample_prompts(context, 1, 25)
+    prompt1 = conversation_instance.generate_sample_prompts(context, 1, 25)
+    prompt2 = conversation_instance.generate_sample_prompts(context, 1, 25)
+    prompt3 = conversation_instance.generate_sample_prompts(context, 1, 25)
     st.session_state.prompts = [prompt1[0], prompt2[0], prompt3[0]]
-
 
 if not st.session_state.prompts:
     generate_initial_prompts()
-
 
 # Display initial prompts or follow-up questions
 if st.session_state.latest_question:
@@ -88,19 +99,17 @@ with col2:
         st.session_state.followup_questions = []
         st.session_state.user_prompt = ""
         generate_initial_prompts()
-        st.rerun()
-
+        st.experimental_rerun()
 
 def update_conversation(prompt):
-    response = ask_question(st.session_state.conversation, prompt, system_prompt)
+    response = conversation_instance.ask_question(system_prompt, prompt, includePrevConvo=True)
     st.session_state.latest_question = prompt
     st.session_state.latest_answer = response['reply']
     st.session_state.conversation = response['conversation']
-    st.session_state.followup_questions = generate_followups(
+    st.session_state.followup_questions = conversation_instance.generate_followups(
         st.session_state.latest_question, st.session_state.latest_answer, 3, 25)
     st.session_state.user_prompt = prompt
-    st.rerun()
-
+    st.experimental_rerun()
 
 if ask_selected:
     st.session_state.user_prompt = choice
@@ -113,5 +122,6 @@ elif ask_custom and user_prompt:
 if st.session_state.latest_answer:
     # Display response
     st.text_area("Response:", st.session_state.latest_answer, height=200)
-    speech_file_path = text_to_speech(st.session_state.latest_answer, "nova")
-    st.audio(speech_file_path)
+    speech_file_path = conversation_instance.text_to_speech(st.session_state.latest_answer, "nova")
+    if speech_file_path:
+        st.audio(speech_file_path)

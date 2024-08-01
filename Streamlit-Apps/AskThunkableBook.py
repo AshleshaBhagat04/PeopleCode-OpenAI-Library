@@ -6,12 +6,16 @@ import streamlit as st
 import sys
 import os
 
-# Add parent directory to sys.path to import USFGenAI module
+# Add parent directory to sys.path to import OpenAI_Conversation module
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from USFGenAI import set_model, ask_question, generate_sample_prompts, generate_followups, ask_assistant_question, generate_assistant_sample_prompts, generate_assistant_followups
+from PeopleCodeOpenAI import OpenAI_Conversation
+
+# Initialize OpenAI_Conversation instance
+API_KEY = os.getenv('OPENAI_API_KEY')
+conversation = OpenAI_Conversation(api_key=API_KEY)
 
 # Streamlit App
 st.title("AskThunkableBook")
@@ -19,9 +23,9 @@ st.title("AskThunkableBook")
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
-set_model(selected_model)
+conversation.set_model(selected_model)
 
-# Assistant ID
+# Set default assistant ID if using specific assistant functionality
 ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
 
 # Initialize session state variables
@@ -43,7 +47,7 @@ user_prompt = st.text_input("Enter your prompt:", "")
 # Ask button
 if st.button("Ask"):
     if user_prompt:
-        response = ask_assistant_question(st.session_state.conversation, user_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = conversation.ask_question(st.session_state.instructions, user_prompt, includePrevConvo=True)
         st.session_state.conversation.append({"role": "user", "content": user_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
@@ -55,7 +59,7 @@ with st.expander("Generate a Prompt"):
 
     if st.button("Generate Prompt"):
         if context:
-            generated_prompts = generate_assistant_sample_prompts(context, 1, max_words, ASSISTANT_ID)
+            generated_prompts = conversation.generate_sample_prompts(context, 1, max_words)
             if generated_prompts:
                 st.session_state.generated_prompt = generated_prompts[0]
                 st.text_area("Generated Prompt:", st.session_state.generated_prompt, height=100)
@@ -64,7 +68,7 @@ with st.expander("Generate a Prompt"):
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
-        response = ask_assistant_question(st.session_state.conversation, st.session_state.generated_prompt, st.session_state.instructions, ASSISTANT_ID)
+        response = conversation.ask_question(st.session_state.instructions, st.session_state.generated_prompt, includePrevConvo=True)
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
@@ -79,7 +83,7 @@ with st.expander("Generate Follow-up Questions"):
         if st.session_state.conversation:
             latest_question = st.session_state.conversation[-2]['content'] if len(st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = generate_assistant_followups(latest_question, latest_answer, num_samples, max_words_followups, ASSISTANT_ID)
+            followup_questions = conversation.generate_followups(latest_question, latest_answer, num_samples, max_words_followups)
             st.session_state.followup_questions = followup_questions[:num_samples]  # Limit to the requested number
             st.write("Follow-up Questions:")
             for idx, question in enumerate(st.session_state.followup_questions):
@@ -95,7 +99,7 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
         if st.button("Ask Follow-up"):
             selected_idx = int(followup_choice.split()[1]) - 1
             selected_followup = st.session_state.followup_questions[selected_idx]
-            followup_response = ask_assistant_question(st.session_state.conversation, selected_followup, st.session_state.instructions, ASSISTANT_ID)
+            followup_response = conversation.ask_question(st.session_state.instructions, selected_followup, includePrevConvo=True)
             st.session_state.conversation.append({"role": "user", "content": selected_followup})
             st.session_state.conversation.append({"role": "assistant", "content": followup_response['reply']})
             st.text_area("Response:", followup_response['reply'], height=200)
