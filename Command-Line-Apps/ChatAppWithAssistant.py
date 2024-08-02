@@ -1,31 +1,31 @@
-# ChatAppWithAssistant.py
-# This script initializes the OpenAI API key and sets up conversation through the command line. It interacts
-# with the user to select a model and ask questions based on the provided context. It handles model selection,
-# generates prompts, and manages follow-up questions.
-
 import sys
+import os
+
 sys.path.append("..")
-from USFGenAI import *
+from PeopleCodeOpenAI import OpenAI_Conversation
 
 # Set your OpenAI assistant ID here
 ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
 
 
-def handle_followups(conversation, latest_question, latest_answer):
-    followup_questions = generate_assistant_followups(latest_question, latest_answer, 2, 6, ASSISTANT_ID)
+def handle_followups(conversation_manager, latest_question, latest_answer, assistant_id):
+    followup_questions = conversation_manager.generate_assistant_followups(
+        latest_question, latest_answer, 3, 25, assistant_id
+    )
     if followup_questions:
         print("Follow-up Questions:")
         for idx, question in enumerate(followup_questions, start=1):
-            print(f"{idx}. {question}")
+            print(f"{question}")
         choice = input("Enter the follow-up question number you want to ask (or 0 to skip): ").strip()
         try:
             choice_idx = int(choice) - 1
             if choice_idx == -1:
-                return latest_question, latest_answer, conversation
+                return latest_question, latest_answer, conversation_manager.get_conversation()
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
-                response = ask_assistant_question(conversation, user_prompt, "You are a very helpful assistant.",
-                                                  ASSISTANT_ID)
+                response = conversation_manager.ask_question(
+                    "You are a very helpful assistant.", user_prompt, includePrevConvo=True
+                )
                 latest_question = user_prompt
                 latest_answer = response['reply']
                 print("Response:\n" + latest_answer)
@@ -34,13 +34,14 @@ def handle_followups(conversation, latest_question, latest_answer):
                 print("Invalid choice.")
         except ValueError:
             print("Invalid input.")
-    return latest_question, latest_answer, conversation
+    return latest_question, latest_answer, conversation_manager.get_conversation()
 
 
 def main():
     print(
         "You are talking to the book, 'Drag and Drop Coding with Thunkable' by David Wolber. Ask Professor Wolber a "
-        "coding question!")
+        "coding question!"
+    )
 
     model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
     print("Available models:")
@@ -57,11 +58,16 @@ def main():
             print("Invalid choice. Using default model.")
     else:
         print("Using default model.")
-    set_model(selected_model)
 
-    conversation = []
-    latest_question = ""
-    latest_answer = ""
+    # Load API key from environment variable
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
+        sys.exit(-1)
+
+    # Initialize OpenAI_Conversation with selected model
+    conversation_manager = OpenAI_Conversation(api_key=api_key, model=selected_model)
+    conversation_manager.set_assistant("asst_RRXmeNcR4UEj8YSrzOqWkJYa")
 
     print("How can I help you today?")
     while True:
@@ -74,14 +80,18 @@ def main():
             print("User prompt cannot be empty. Please enter a valid prompt.")
             continue
 
-        response = ask_assistant_question(conversation, user_prompt, "You are a very helpful assistant.", ASSISTANT_ID)
+        response = conversation_manager.ask_question(
+            "You are a very helpful assistant.", user_prompt, includePrevConvo=True
+        )
         latest_question = user_prompt
         latest_answer = response['reply']
         conversation = response['conversation']
 
         print("Response:\n" + latest_answer)
 
-        latest_question, latest_answer, conversation = handle_followups(conversation, latest_question, latest_answer)
+        latest_question, latest_answer, conversation = handle_followups(
+            conversation_manager, latest_question, latest_answer, ASSISTANT_ID
+        )
 
 
 if __name__ == "__main__":

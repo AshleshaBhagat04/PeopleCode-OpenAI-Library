@@ -3,8 +3,16 @@
 # line. Users can ask questions, generate prompts, and get follow-up questions.
 
 import sys
+import os
+
 sys.path.append("..")
-from USFGenAI import *
+from PeopleCodeOpenAI import OpenAI_Conversation
+
+# Load API key from environment variable
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    print("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
+    sys.exit(-1)
 
 # Define available models
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -15,26 +23,29 @@ for idx, model in enumerate(model_options, start=1):
 # Select model with default
 selected_model = model_options[0]
 try:
-    model_choice = int(input("Select the model to use or press enter to use the default: ").strip())
+    model_choice = int(input("Select the model to use (1-3) or press enter to use the default: ").strip())
     if 1 <= model_choice <= len(model_options):
         selected_model = model_options[model_choice - 1]
     else:
         print("Invalid choice. Using default model.")
 except ValueError:
     print("Using default model.")
-set_model(selected_model)
 
-conversation = []
+# Initialize OpenAI_Conversation with selected model
+conversation_manager = OpenAI_Conversation(api_key=api_key, model=selected_model)
+
+instructions = "You are a helpful assistant."
+conversation = conversation_manager.get_conversation()
 
 print("How can I help you today?")
 while True:
     user_prompt = input("Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ")
-    system_prompt = ""
+    system_prompt = "You are a helpful assistant."
     if user_prompt.strip().lower() == "exit":
-        sys.exit(-1)
+        sys.exit(0)
     elif user_prompt.strip().lower() == "generate":
         prompt_context = input("Enter the context for generating a prompt: ")
-        generated_prompts = generate_sample_prompts(prompt_context, 1, 25)
+        generated_prompts = conversation_manager.generate_sample_prompts(prompt_context, 1, 25)
         print("Generated Prompts:")
         for idx, question in enumerate(generated_prompts, start=1):
             print(f"{idx}. {question}")
@@ -44,12 +55,16 @@ while True:
         if not system_prompt.strip():
             system_prompt = "You are a very helpful assistant."
 
-    response = ask_question(conversation, user_prompt, system_prompt)
-    answer = response['reply']
-    conversation = response['conversation']
+    # Get response from OpenAI model
+    response_dict = conversation_manager.ask_question(system_prompt, user_prompt, includePrevConvo=True)
+
+    # Extract the reply from the response dictionary
+    answer = response_dict.get('reply', 'No response received.')
+
+    # Display the response
     print("Response:\n" + answer)
 
-    followup_qs = generate_followups(user_prompt, answer, 3, 25)
+    followup_qs = conversation_manager.generate_followups(user_prompt, answer, 3, 25)
     print("Follow-up Questions:")
     for idx, question in enumerate(followup_qs, start=1):
         print(f"{question}")
