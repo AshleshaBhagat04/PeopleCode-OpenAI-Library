@@ -72,22 +72,10 @@ class OpenAI_Conversation:
             dict: The response from the OpenAI Chat API,
                   containing the reply and updated conversation.
         """
-        if includePrevConvo:
-            messages = [{"role": "system", "content": instructions}] + self.__prevConversation
+        if self.__assistant:
+            return self.__ask_assistant(self.__prevConversation, question, instructions, self.__assistant)
         else:
-            messages = [{"role": "system", "content": instructions}]
-        messages.append({"role": "user", "content": question})
-
-        response = self.__client.chat.completions.create(
-            model=self.__model,
-            messages=messages,
-            temperature=self.__temperature
-        )
-
-        answer = response.choices[0].message.content.strip()
-        self.__prevConversation.append({"role": "assistant", "content": answer})
-
-        return {"reply": answer, "conversation": self.__prevConversation}
+            return self.__ask_openai(self.__prevConversation, instructions, question)
 
     def generate_sample_prompts(self, context, num_samples, max_words, assistant_id=None, followups=None):
         """
@@ -108,9 +96,10 @@ class OpenAI_Conversation:
             f"Each follow-up question should be no more than {max_words} words. Only provide the prompts in the response."
             if followups else
             f"Generate {num_samples} sample prompts from the user perspective based on the context. "
-            f"Each sample prompt should be no more than {max_words} words. Only provide the questions in the response.")
+            f"Each sample prompt should be no more than {max_words} words. Only provide the questions in the response."
+        )
 
-        if assistant_id is not None:
+        if assistant_id:
             return self.__generate_assistant_prompts(context, instructions, assistant_id)
         else:
             response = self.__client.chat.completions.create(
