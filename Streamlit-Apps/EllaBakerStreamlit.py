@@ -105,7 +105,7 @@ with col2:
 
 
 def update_conversation(prompt):
-    response = conversation_instance.ask_question(system_prompt, prompt, includePrevConvo=True)
+    response = conversation_instance.ask_question(system_prompt, prompt)
     st.session_state.latest_question = prompt
     st.session_state.latest_answer = response['reply']
     st.session_state.conversation = response['conversation']

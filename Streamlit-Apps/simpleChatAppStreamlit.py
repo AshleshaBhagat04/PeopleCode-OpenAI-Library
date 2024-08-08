@@ -32,8 +32,7 @@ if st.button("Ask"):
 
         response = opeanai_conversation.ask_question(
             instructions="You are a helpful assistant.",
-            question=user_prompt,
-            includePrevConvo=True
+            question=user_prompt
         )
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", response['reply'], height=200)

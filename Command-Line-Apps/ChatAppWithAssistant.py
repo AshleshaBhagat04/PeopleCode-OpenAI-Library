@@ -81,7 +81,7 @@ def main():
             continue
 
         response = conversation_manager.ask_question(
-            "You are a very helpful assistant.", user_prompt, includePrevConvo=True
+            "You are a very helpful assistant.", user_prompt
         )
         latest_question = user_prompt
         latest_answer = response['reply']

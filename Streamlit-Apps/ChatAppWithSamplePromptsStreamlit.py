@@ -42,7 +42,7 @@ user_prompt = st.text_input("Enter your prompt:")
 
 if st.button("Ask"):
     if user_prompt:
-        response = conversation_instance.ask_question(instructions, user_prompt, includePrevConvo=True)
+        response = conversation_instance.ask_question(instructions, user_prompt)
         answer = response['reply']
         st.session_state.conversation = response['conversation']
         st.text_area("Response:", answer, height=200)

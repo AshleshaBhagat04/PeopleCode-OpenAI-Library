@@ -56,7 +56,7 @@ while True:
             system_prompt = "You are a very helpful assistant."
 
     # Get response from OpenAI model
-    response_dict = conversation_manager.ask_question(system_prompt, user_prompt, includePrevConvo=True)
+    response_dict = conversation_manager.ask_question(system_prompt, user_prompt)
 
     # Extract the reply from the response dictionary
     answer = response_dict.get('reply', 'No response received.')

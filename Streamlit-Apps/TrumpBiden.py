@@ -21,8 +21,7 @@ def ask_it():
     if st.session_state.cur_question >= 0:
         # Use predefined questions
         response = conversation_manager.ask_question(st.session_state.conversation,
-                                                     questions[st.session_state.cur_question],
-                                                     st.session_state.instructions)
+                                                     questions[st.session_state.cur_question])
         st.text_area("OpenAI's Response:", response['reply'], height=300)
 
         # Add additional information for the specific question index
@@ -41,8 +40,7 @@ def ask_it():
         # Use user-provided input
         if st.session_state.text_input_value:
             response = conversation_manager.ask_question(st.session_state.conversation,
-                                                         st.session_state.text_input_value,
-                                                         st.session_state.instructions)
+                                                         st.session_state.text_input_value)
             st.text_area("OpenAI's Response:", response['reply'], height=300)
 
 

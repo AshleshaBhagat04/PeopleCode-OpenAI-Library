@@ -43,7 +43,7 @@ while True:
         sys.exit(0)
 
     # Get response from OpenAI model
-    response_dict = conversation_manager.ask_question(instructions, user_prompt, includePrevConvo=True)
+    response_dict = conversation_manager.ask_question(instructions, user_prompt)
 
     # Extract the reply from the response dictionary
     response = response_dict.get('reply', 'No response received.')
