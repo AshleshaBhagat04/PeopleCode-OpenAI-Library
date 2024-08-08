@@ -16,10 +16,6 @@ class OpenAI_Conversation:
         self.__prevConversation = []
         self.__temperature = temperature
 
-    def __set_context(self):
-        # Telling the AI the incoming conversation is based on this context
-        pass
-
     def set_model(self, model_name):
         """
         Sets the model for the OpenAI API.
