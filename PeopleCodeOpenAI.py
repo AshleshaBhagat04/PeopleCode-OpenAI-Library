@@ -55,14 +55,13 @@ class OpenAI_Conversation:
         """
         return self.__prevConversation
 
-    def ask_question(self, instructions, question, includePrevConvo=True):
+    def ask_question(self, instructions, question):
         """
         Asks a question to the OpenAI Chat API.
 
         Args:
             instructions (str): Instructions or system prompt for the chat.
             question (str): The question to ask.
-            includePrevConvo (bool): Whether to include previous conversation in the request.
 
         Returns:
             dict: The response from the OpenAI Chat API,
@@ -73,7 +72,7 @@ class OpenAI_Conversation:
         else:
             return self.__ask_openai(self.__prevConversation, instructions, question)
 
-    def generate_sample_prompts(self, context, num_samples, max_words, assistant_id=None, followups=None):
+    def generate_sample_prompts(self, context, num_samples, max_words, assistant_id=None):
         """
         Generates a prompt based on the context.
 
@@ -82,17 +81,13 @@ class OpenAI_Conversation:
             num_samples (int): Number of prompts to generate.
             max_words (int): Maximum number of words for the prompt.
             assistant_id (str): The ID of the existing assistant.
-            followups (bool): Whether the prompts are follow-up questions.
 
         Returns:
             list: A list of generated prompts.
         """
         instructions = (
-            f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. "
-            f"Each follow-up question should be no more than {max_words} words. Only provide the prompts in the response."
-            if followups else
             f"Generate {num_samples} sample prompts from the user perspective based on the context. "
-            f"Each sample prompt should be no more than {max_words} words. Only provide the questions in the response."
+            f"Each sample prompt should be no more than {max_words} words."
         )
 
         if assistant_id:
@@ -135,11 +130,59 @@ class OpenAI_Conversation:
             max_words (int): Maximum number of words for each follow-up question.
             assistant_id (str): The ID of the existing assistant.
 
-        Returns:
-            list: A list of follow-up questions.
+            Returns:
+                list: A list of follow-up questions.
         """
         recent_history = f"User: {question}\nAssistant: {response}\n"
-        return self.generate_sample_prompts(recent_history, num_samples, max_words, assistant_id, followups=True)
+
+        instructions = (
+            f"Generate {num_samples} follow-up questions from the user perspective based on the conversation. "
+            f"Each follow-up question should be no more than {max_words} words. Only provide the questions in the response."
+        )
+
+        if assistant_id:
+            # Create a new thread
+            thread = self.__client.beta.threads.create()
+
+            # Add the user's recent history to the thread
+            self.__client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=recent_history
+            )
+
+            # Run the assistant
+            run = self.__client.beta.threads.runs.create_and_poll(
+                thread_id=thread.id,
+                assistant_id=assistant_id,
+                instructions=instructions
+            )
+
+            if run.status == 'completed':
+                # List all messages in the thread
+                messages = self.__client.beta.threads.messages.list(
+                    thread_id=thread.id
+                )
+
+                # Get the latest assistant message
+                followups = []
+                for message in messages.data:
+                    if message.role == "assistant":
+                        followups = message.content[0].text.value.split('\n')
+                return followups
+            else:
+                return []
+        else:
+            response = self.__client.chat.completions.create(
+                model=self.__model,
+                messages=[
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": recent_history}
+                ],
+                temperature=self.__temperature
+            )
+            followups = response.choices[0].message.content.strip().split('\n')
+            return followups
 
     def generate_assistant_followups(self, question, response, num_samples, max_words, assistant_id):
         """
