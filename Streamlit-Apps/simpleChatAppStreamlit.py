@@ -11,14 +11,14 @@ from PeopleCodeOpenAI import OpenAI_Conversation
 
 # Initialize the conversation instance
 api_key = os.getenv('OPENAI_API_KEY')
-opeanai_conversation = OpenAI_Conversation(api_key=api_key, model="gpt-4")
+openai_conversation = OpenAI_Conversation(api_key=api_key, model="gpt-4")
 
 st.title("Simple Q&A")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
 selected_model = st.selectbox("Select the model to use:", model_options)
-opeanai_conversation.set_model(selected_model)
+openai_conversation.set_model(selected_model)
 
 user_prompt = st.text_input("Enter a prompt:")
 
@@ -30,11 +30,17 @@ if st.button("Ask"):
         if 'conversation' not in st.session_state:
             st.session_state.conversation = []
 
-        response = opeanai_conversation.ask_question(
+        # Set previous conversation history
+        openai_conversation._OpenAI_Conversation__prevConversation = st.session_state.conversation
+
+        response = openai_conversation.ask_question(
             instructions="You are a helpful assistant.",
             question=user_prompt
         )
+
+        # Update the conversation history in the session state
         st.session_state.conversation = response['conversation']
+
         st.text_area("Response:", response['reply'], height=200)
     except Exception as e:
         st.error(f"An error occurred: {e}")

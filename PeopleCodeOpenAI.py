@@ -55,20 +55,20 @@ class OpenAI_Conversation:
         """
         return self.__prevConversation
 
-    def ask_question(self, instructions, question):
+    def ask_question(self, instructions, question, assistant_id=None):
         """
         Asks a question to the OpenAI Chat API.
 
         Args:
             instructions (str): Instructions or system prompt for the chat.
             question (str): The question to ask.
-
+            assistant_id (str): The ID of the existing assistant.
         Returns:
             dict: The response from the OpenAI Chat API,
                   containing the reply and updated conversation.
         """
-        if self.__assistant:
-            return self.__ask_assistant(self.__prevConversation, question, instructions, self.__assistant)
+        if assistant_id:
+            return self.__ask_assistant(self.__prevConversation, question, instructions, assistant_id)
         else:
             return self.__ask_openai(self.__prevConversation, instructions, question)
 

@@ -67,7 +67,6 @@ def main():
 
     # Initialize OpenAI_Conversation with selected model
     conversation_manager = OpenAI_Conversation(api_key=api_key, model=selected_model)
-    conversation_manager.set_assistant("asst_RRXmeNcR4UEj8YSrzOqWkJYa")
 
     print("How can I help you today?")
     while True:
@@ -81,7 +80,7 @@ def main():
             continue
 
         response = conversation_manager.ask_question(
-            "You are a very helpful assistant.", user_prompt
+            "You are a very helpful assistant.", user_prompt, ASSISTANT_ID
         )
         latest_question = user_prompt
         latest_answer = response['reply']

@@ -47,7 +47,7 @@ user_prompt = st.text_input("Enter your prompt:", "")
 # Ask button
 if st.button("Ask"):
     if user_prompt:
-        response = conversation.ask_question(st.session_state.instructions, user_prompt)
+        response = conversation.ask_question(st.session_state.instructions, user_prompt, ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": user_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
@@ -68,7 +68,7 @@ with st.expander("Generate a Prompt"):
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
-        response = conversation.ask_question(st.session_state.instructions, st.session_state.generated_prompt)
+        response = conversation.ask_question(st.session_state.instructions, st.session_state.generated_prompt, ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
         st.text_area("Response:", response['reply'], height=200)
