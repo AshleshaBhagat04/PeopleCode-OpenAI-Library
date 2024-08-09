@@ -200,6 +200,42 @@ class OpenAI_Conversation:
         """
         return self.generate_followups(question, response, num_samples, max_words, assistant_id)
 
+    def generate_list(self, list_description, numItems, maxWordsPerItem):
+        """
+        Generates a list of items based on the provided description.
+
+        Args:
+            list_description (str): A description of the list to generate.
+            numItems (int): The number of items to generate in the list.
+            maxWordsPerItem (int): The maximum number of words per list item.
+
+        Returns:
+            list: A list of generated items.
+        """
+        instructions = (
+            f"Generate a list of {numItems} items based on the following description: {list_description}. "
+            f"Each item should be no more than {maxWordsPerItem} words. "
+            f"Please use '%%' as the delimiter between items and do not add any extra content."
+        )
+
+        # Create the prompt with instructions
+        response = self.__client.chat.completions.create(
+            model=self.__model,
+            messages=[
+                {"role": "system", "content": instructions}
+            ],
+            temperature=self.__temperature
+        )
+
+        # Extract the response and split the list items
+        raw_list = response.choices[0].message.content.strip()
+        list_items = raw_list.split('%%')
+
+        # Remove any leading/trailing whitespace from each item
+        list_items = [item.strip() for item in list_items if item.strip()]
+
+        return list_items
+
     def text_to_speech(self, text, voice=None):
         """
         Converts text to speech using OpenAI's TTS model.
