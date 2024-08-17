@@ -7,6 +7,15 @@ DEFAULT_TEMPERATURE = 0.7
 
 class OpenAI_Conversation:
     def __init__(self, api_key, model=DEFAULT_MODEL, assistant=None, temperature=DEFAULT_TEMPERATURE):
+        """
+        Initializes the OpenAI_Conversation instance with API key and optional model and assistant.
+
+        Args:
+            api_key: The API key for OpenAI.
+            model: The model to use, default is 'gpt-4'.
+            assistant: The assistant ID, default is None.
+            temperature: The creativity level of the model output, ranging from 0 to 1.
+        """
         self.__api_key = api_key
         if not self.__api_key:
             raise Exception("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
@@ -18,28 +27,28 @@ class OpenAI_Conversation:
 
     def set_model(self, model_name):
         """
-        Sets the model for the OpenAI API.
+        Sets the model to be used for the conversation.
 
         Args:
-            model_name (str): The model name.
+            model_name: The name of the model to use.
         """
         self.__model = model_name
 
     def set_assistant(self, assistant_name):
         """
-        Sets the assistant name or description for context in the conversation.
+        Sets the assistant to be used for the conversation.
 
         Args:
-            assistant_name (str): The assistant's name or description.
+            assistant_name: The name of the assistant to use.
         """
         self.__assistant = assistant_name
 
     def set_temperature(self, temperature):
         """
-        Sets the temperature for the OpenAI API.
+        Sets the temperature (creativity level) for the model's output.
 
         Args:
-            temperature (float): The temperature setting (between 0 and 1).
+            temperature: A float between 0 and 1 representing the creativity level.
         """
         if 0 <= temperature <= 1:
             self.__temperature = temperature
@@ -48,24 +57,24 @@ class OpenAI_Conversation:
 
     def get_conversation(self):
         """
-        Returns the conversation history.
+        Returns the current conversation history.
 
         Returns:
-            list: The previous conversation history.
+            A list of dictionaries representing the conversation history.
         """
         return self.__prevConversation
 
     def ask_question(self, instructions, question, assistant_id=None):
         """
-        Asks a question to the OpenAI Chat API.
+        Sends a question to the model and returns the model's reply.
 
         Args:
-            instructions (str): Instructions or system prompt for the chat.
-            question (str): The question to ask.
-            assistant_id (str): The ID of the existing assistant.
+            instructions: Instructions for the model.
+            question: The user's question.
+            assistant_id: The assistant ID to use, if any.
+
         Returns:
-            dict: The response from the OpenAI Chat API,
-                  containing the reply and updated conversation.
+            A string containing the model's reply.
         """
         if assistant_id:
             return self.__ask_assistant(self.__prevConversation, question, instructions, assistant_id)
@@ -74,16 +83,16 @@ class OpenAI_Conversation:
 
     def generate_sample_prompts(self, context, num_samples, max_words, assistant_id=None):
         """
-        Generates a prompt based on the context.
+        Generates sample prompts based on the given context.
 
         Args:
-            context (str): The context for generating the prompt.
-            num_samples (int): Number of prompts to generate.
-            max_words (int): Maximum number of words for the prompt.
-            assistant_id (str): The ID of the existing assistant.
+            context: The context for generating the prompts.
+            num_samples: The number of prompts to generate.
+            max_words: The maximum number of words per prompt.
+            assistant_id: The assistant ID to use, if any.
 
         Returns:
-            list: A list of generated prompts.
+            A list of strings, each representing a generated sample prompt.
         """
         instructions = (
             f"Generate {num_samples} sample prompts from the user perspective based on the context. "
@@ -104,34 +113,19 @@ class OpenAI_Conversation:
             prompts = response.choices[0].message.content.strip().split('\n')
             return prompts
 
-    def generate_assistant_sample_prompts(self, context, num_samples, max_words, assistant_id):
-        """
-        Generates a prompt based on the OpenAI Assistant with a specified ID.
-
-        Args:
-            context (str): The context for generating the prompt.
-            num_samples (int): Number of prompts to generate.
-            max_words (int): Maximum number of words for the prompt.
-            assistant_id (str): The ID of the existing assistant.
-
-        Returns:
-            list: A list of generated prompts.
-        """
-        return self.generate_sample_prompts(context, num_samples, max_words, assistant_id)
-
     def generate_followups(self, question, response, num_samples, max_words, assistant_id=None):
         """
-        Generates follow-up questions.
+        Generates follow-up questions based on the previous question and response.
 
         Args:
-            question (str): The previous question asked.
-            response (str): The response to the previous question.
-            num_samples (int): Number of follow-up questions to generate.
-            max_words (int): Maximum number of words for each follow-up question.
-            assistant_id (str): The ID of the existing assistant.
+            question: The previous question.
+            response: The model's response to the previous question.
+            num_samples: The number of follow-up questions to generate.
+            max_words: The maximum number of words per follow-up question.
+            assistant_id: The assistant ID to use, if any.
 
-            Returns:
-                list: A list of follow-up questions.
+        Returns:
+            A list of strings, each representing a generated follow-up question.
         """
         recent_history = f"User: {question}\nAssistant: {response}\n"
 
@@ -141,37 +135,7 @@ class OpenAI_Conversation:
         )
 
         if assistant_id:
-            # Create a new thread
-            thread = self.__client.beta.threads.create()
-
-            # Add the user's recent history to the thread
-            self.__client.beta.threads.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=recent_history
-            )
-
-            # Run the assistant
-            run = self.__client.beta.threads.runs.create_and_poll(
-                thread_id=thread.id,
-                assistant_id=assistant_id,
-                instructions=instructions
-            )
-
-            if run.status == 'completed':
-                # List all messages in the thread
-                messages = self.__client.beta.threads.messages.list(
-                    thread_id=thread.id
-                )
-
-                # Get the latest assistant message
-                followups = []
-                for message in messages.data:
-                    if message.role == "assistant":
-                        followups = message.content[0].text.value.split('\n')
-                return followups
-            else:
-                return []
+            return self.__generate_assistant_followups(recent_history, instructions, assistant_id)
         else:
             response = self.__client.chat.completions.create(
                 model=self.__model,
@@ -184,33 +148,17 @@ class OpenAI_Conversation:
             followups = response.choices[0].message.content.strip().split('\n')
             return followups
 
-    def generate_assistant_followups(self, question, response, num_samples, max_words, assistant_id):
-        """
-        Generates follow-up questions based on the OpenAI Assistant with a specified ID.
-
-        Args:
-            question (str): The previous question asked.
-            response (str): The response to the previous question.
-            num_samples (int): Number of follow-up questions to generate.
-            max_words (int): Maximum number of words for each follow-up question.
-            assistant_id (str): The ID of the existing assistant.
-
-        Returns:
-            list: A list of follow-up questions.
-        """
-        return self.generate_followups(question, response, num_samples, max_words, assistant_id)
-
     def generate_list(self, list_description, numItems, maxWordsPerItem):
         """
         Generates a list of items based on the provided description.
 
         Args:
-            list_description (str): A description of the list to generate.
-            numItems (int): The number of items to generate in the list.
-            maxWordsPerItem (int): The maximum number of words per list item.
+            list_description: A description of the list to be generated.
+            numItems: The number of items to generate.
+            maxWordsPerItem: The maximum number of words per item.
 
         Returns:
-            list: A list of generated items.
+            A list of strings, each representing an item in the generated list.
         """
         instructions = (
             f"Generate a list of {numItems} items based on the following description: {list_description}. "
@@ -218,7 +166,6 @@ class OpenAI_Conversation:
             f"Please use '%%' as the delimiter between items and do not add any extra content."
         )
 
-        # Create the prompt with instructions
         response = self.__client.chat.completions.create(
             model=self.__model,
             messages=[
@@ -227,11 +174,8 @@ class OpenAI_Conversation:
             temperature=self.__temperature
         )
 
-        # Extract the response and split the list items
         raw_list = response.choices[0].message.content.strip()
         list_items = raw_list.split('%%')
-
-        # Remove any leading/trailing whitespace from each item
         list_items = [item.strip() for item in list_items if item.strip()]
 
         return list_items
@@ -281,29 +225,24 @@ class OpenAI_Conversation:
 
     def __ask_assistant(self, conversation, question, instructions, assistant_id):
         """
-        Private function to ask a question to an OpenAI Assistant with a specified ID.
+        Handles asking a question to a specific assistant and returns the assistant's reply.
 
         Args:
-            conversation (list): The conversation history.
-            question (str): The question to ask.
-            instructions (str): Instructions or system prompt for the chat.
-            assistant_id (str): The ID of the existing assistant.
+            conversation: The current conversation history.
+            question: The user's question.
+            instructions: Instructions for the assistant.
+            assistant_id: The assistant ID to use.
 
         Returns:
-            dict: The response from the OpenAI Chat API,
-                  containing the reply with citations and updated conversation.
+            A string containing the assistant's reply.
         """
-        # Create a new thread
         thread = self.__client.beta.threads.create()
-
-        # Add the user's question to the thread
         self.__client.beta.threads.messages.create(
             thread_id=thread.id,
             role="user",
             content=question
         )
 
-        # Run the assistant
         run = self.__client.beta.threads.runs.create_and_poll(
             thread_id=thread.id,
             assistant_id=assistant_id,
@@ -311,82 +250,59 @@ class OpenAI_Conversation:
         )
 
         if run.status == 'completed':
-            # List all messages in the thread
-            messages = self.__client.beta.threads.messages.list(
-                thread_id=thread.id
-            )
-
-            # Get the latest assistant message
+            messages = self.__client.beta.threads.messages.list(thread_id=thread.id)
             latest_message = None
             for message in messages.data:
                 if message.role == "assistant":
                     latest_message = message.content[0].text.value
-                    annotations = message.content[0].text.annotations
-                    for index, annotation in enumerate(annotations):
-                        if file_citation := getattr(annotation, "file_citation", None):
-                            cited_file = self.__client.files.retrieve(file_citation.file_id)
-                            latest_message = latest_message.replace(annotation.text,
-                                                                    f"[{index}]({cited_file.filename})")
-                            latest_message += f"\n[{index}] {cited_file.filename}"
-
-            if latest_message:
-                return {"reply": latest_message, "conversation": conversation}
-            else:
-                return {"reply": None, "conversation": conversation}
-        else:
-            return {"reply": None, "conversation": conversation}
+            return latest_message or ""
+        return ""
 
     def __ask_openai(self, conversation, instructions, question):
         """
-        Private function to ask a question to the OpenAI Chat API.
+        Handles asking a question to the OpenAI model and returns the model's reply.
 
         Args:
-            conversation (list): The conversation history.
-            instructions (str): Instructions or system prompt for the chat.
+            conversation: The current conversation history.
+            instructions: Instructions for the model.
+            question: The user's question.
 
         Returns:
-            dict: The response from the OpenAI Chat API,
-                  containing the reply and updated conversation.
+            A string containing the model's reply.
         """
         messages = [{"role": "system", "content": instructions}] + conversation
         messages.append({"role": "user", "content": question})
 
-        # Make the API call
         response = self.__client.chat.completions.create(
             model=self.__model,
             messages=messages,
             temperature=self.__temperature
         )
 
-        # Extract the answer from the response
         answer = response.choices[0].message.content.strip()
         conversation.append({"role": "assistant", "content": answer})
 
-        return {"reply": answer, "conversation": conversation}
+        return answer
 
     def __generate_assistant_prompts(self, context, instructions, assistant_id):
         """
-        Private function to generate prompts using an OpenAI Assistant.
+        Generates sample prompts using a specific assistant and returns them as a list.
 
         Args:
-            context (str): The context for generating the prompt.
-            instructions (str): Instructions or system prompt for the chat.
-            assistant_id (str): The ID of the existing assistant.
+            context: The context for generating the prompts.
+            instructions: Instructions for the assistant.
+            assistant_id: The assistant ID to use.
 
         Returns:
-            list: A list of generated prompts.
+            A list of strings, each representing a generated sample prompt.
         """
-        # Create a new thread
         thread = self.__client.beta.threads.create()
-
-        # Add the user's question to the thread
         self.__client.beta.threads.messages.create(
             thread_id=thread.id,
             role="user",
             content=context
         )
 
-        # Run the assistant
         run = self.__client.beta.threads.runs.create_and_poll(
             thread_id=thread.id,
             assistant_id=assistant_id,
@@ -394,16 +310,44 @@ class OpenAI_Conversation:
         )
 
         if run.status == 'completed':
-            # List all messages in the thread
-            messages = self.__client.beta.threads.messages.list(
-                thread_id=thread.id
-            )
-
-            # Get the latest assistant message
+            messages = self.__client.beta.threads.messages.list(thread_id=thread.id)
             prompts = []
             for message in messages.data:
                 if message.role == "assistant":
                     prompts = message.content[0].text.value.split('\n')
             return prompts
-        else:
-            return []
+        return []
+
+    def __generate_assistant_followups(self, recent_history, instructions, assistant_id):
+        """
+        Generates follow-up questions using a specific assistant and returns them as a list.
+
+        Args:
+            recent_history: The recent conversation history.
+            instructions: Instructions for the assistant.
+            assistant_id: The assistant ID to use.
+
+        Returns:
+            A list of strings, each representing a generated follow-up question.
+        """
+        thread = self.__client.beta.threads.create()
+        self.__client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=recent_history
+        )
+
+        run = self.__client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant_id,
+            instructions=instructions
+        )
+
+        if run.status == 'completed':
+            messages = self.__client.beta.threads.messages.list(thread_id=thread.id)
+            followups = []
+            for message in messages.data:
+                if message.role == "assistant":
+                    followups = message.content[0].text.value.split('\n')
+            return followups
+        return []
