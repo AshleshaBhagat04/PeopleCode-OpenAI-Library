@@ -34,19 +34,18 @@ if not api_key:
 # Initialize OpenAI_Conversation
 conversation_manager = OpenAI_Conversation(api_key=api_key, model=selected_model)
 
+# Instructions for the assistant
 instructions = "You are a helpful assistant."
 
 print("How can I help you today?")
 while True:
-    user_prompt = input("Enter a prompt. Type 'exit' to quit: ")
-    if user_prompt.strip().lower() == "exit":
+    user_prompt = input("Enter a prompt. Type 'exit' to quit: ").strip()
+    if user_prompt.lower() == "exit":
+        print("Goodbye!")
         sys.exit(0)
 
     # Get response from OpenAI model
-    response_dict = conversation_manager.ask_question(instructions, user_prompt)
-
-    # Extract the reply from the response dictionary
-    response = response_dict.get('reply', 'No response received.')
+    response = conversation_manager.ask_question(instructions, user_prompt)
 
     # Display the response
     print("Response:\n" + response)

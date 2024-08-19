@@ -15,6 +15,9 @@ from PeopleCodeOpenAI import OpenAI_Conversation
 
 # Initialize OpenAI_Conversation instance
 API_KEY = os.getenv('OPENAI_API_KEY')
+if not API_KEY:
+    st.error("Error: The API key is not set. Set the environment variable 'OPENAI_API_KEY'.")
+    st.stop()
 conversation = OpenAI_Conversation(api_key=API_KEY)
 
 # Streamlit App
@@ -49,8 +52,8 @@ if st.button("Ask"):
     if user_prompt:
         response = conversation.ask_question(st.session_state.instructions, user_prompt, ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": user_prompt})
-        st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
-        st.text_area("Response:", response['reply'], height=200)
+        st.session_state.conversation.append({"role": "assistant", "content": response})
+        st.text_area("Response:", response, height=200)
 
 # Generate prompt section
 with st.expander("Generate a Prompt"):
@@ -70,8 +73,8 @@ if st.session_state.generated_prompt:
     if st.button("Ask Generated Prompt"):
         response = conversation.ask_question(st.session_state.instructions, st.session_state.generated_prompt, ASSISTANT_ID)
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
-        st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
-        st.text_area("Response:", response['reply'], height=200)
+        st.session_state.conversation.append({"role": "assistant", "content": response})
+        st.text_area("Response:", response, height=200)
         st.session_state.generated_prompt = ""
 
 # Follow-up questions section
@@ -87,7 +90,7 @@ with st.expander("Generate Follow-up Questions"):
             st.session_state.followup_questions = followup_questions[:num_samples]  # Limit to the requested number
             st.write("Follow-up Questions:")
             for idx, question in enumerate(st.session_state.followup_questions):
-                st.write(f"{question}")
+                st.write(f"{idx + 1}. {question}")
 
 # Select and ask follow-up question
 if 'followup_questions' in st.session_state and st.session_state.followup_questions:
@@ -101,11 +104,11 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
             selected_followup = st.session_state.followup_questions[selected_idx]
             followup_response = conversation.ask_question(st.session_state.instructions, selected_followup)
             st.session_state.conversation.append({"role": "user", "content": selected_followup})
-            st.session_state.conversation.append({"role": "assistant", "content": followup_response['reply']})
-            st.text_area("Response:", followup_response['reply'], height=200)
+            st.session_state.conversation.append({"role": "assistant", "content": followup_response})
+            st.text_area("Response:", followup_response, height=200)
 
             # Clear follow-up questions after selection
-            st.session_state.followup_questions = None
+            st.session_state.followup_questions = []
 
 # Display conversation history
 if st.button("Show Conversation History"):

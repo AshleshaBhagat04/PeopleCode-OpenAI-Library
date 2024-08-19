@@ -9,7 +9,7 @@ ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
 
 
 def handle_followups(conversation_manager, latest_question, latest_answer, assistant_id):
-    followup_questions = conversation_manager.generate_assistant_followups(
+    followup_questions = conversation_manager.generate_followups(
         latest_question, latest_answer, 3, 25, assistant_id
     )
     if followup_questions:
@@ -24,12 +24,12 @@ def handle_followups(conversation_manager, latest_question, latest_answer, assis
             elif 0 <= choice_idx < len(followup_questions):
                 user_prompt = followup_questions[choice_idx]
                 response = conversation_manager.ask_question(
-                    "You are a very helpful assistant.", user_prompt, includePrevConvo=True
+                    "You are a very helpful assistant.", user_prompt
                 )
                 latest_question = user_prompt
-                latest_answer = response['reply']
+                latest_answer = response  # Directly handle the response as a string
                 print("Response:\n" + latest_answer)
-                return latest_question, latest_answer, response['conversation']
+                return latest_question, latest_answer, conversation_manager.get_conversation()
             else:
                 print("Invalid choice.")
         except ValueError:
@@ -70,8 +70,8 @@ def main():
 
     print("How can I help you today?")
     while True:
-        user_prompt = input("Enter a prompt or type 'exit' to quit: ").strip().lower()
-        if user_prompt == "exit":
+        user_prompt = input("Enter a prompt or type 'exit' to quit: ").strip()
+        if user_prompt.lower() == "exit":
             print("Goodbye!")
             sys.exit(0)
 
@@ -80,11 +80,11 @@ def main():
             continue
 
         response = conversation_manager.ask_question(
-            "You are a very helpful assistant.", user_prompt, ASSISTANT_ID
+            "You are a very helpful assistant.", user_prompt
         )
         latest_question = user_prompt
-        latest_answer = response['reply']
-        conversation = response['conversation']
+        latest_answer = response  # Directly handle the response as a string
+        conversation = conversation_manager.get_conversation()
 
         print("Response:\n" + latest_answer)
 

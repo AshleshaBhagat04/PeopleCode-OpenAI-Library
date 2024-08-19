@@ -7,24 +7,26 @@ import streamlit as st
 from PeopleCodeOpenAI import OpenAI_Conversation
 
 
-def getQuestions(questions):
-    questions.append("Compare Trump/Biden on Womens Rights")
-    questions.append("Compare Trump/Biden on Civil Rights")
-    questions.append("What are typical behaviors of an aspiring autocrat?")
-    questions.append("Has Donald Trump exhibited the behavior of an aspiring autocrat?")
-    questions.append("Is a peaceful transition to power important to a democracy?")
-    questions.append("Did Trump facilitate the peaceful transition to power on Jan 6., 2021?")
+def get_questions():
+    return [
+        "Compare Trump/Biden on Women's Rights",
+        "Compare Trump/Biden on Civil Rights",
+        "What are typical behaviors of an aspiring autocrat?",
+        "Has Donald Trump exhibited the behavior of an aspiring autocrat?",
+        "Is a peaceful transition to power important to a democracy?",
+        "Did Trump facilitate the peaceful transition to power on Jan 6, 2021?"
+    ]
 
 
 # Function to handle question submission
 def ask_it():
     if st.session_state.cur_question >= 0:
         # Use predefined questions
-        response = conversation_manager.ask_question(st.session_state.conversation,
-                                                     questions[st.session_state.cur_question])
-        st.text_area("OpenAI's Response:", response['reply'], height=300)
+        question = questions[st.session_state.cur_question]
+        response = conversation_manager.ask_question(st.session_state.conversation, question)
+        st.text_area("OpenAI's Response:", response, height=300)
 
-        # Add additional information for the specific question index
+        # Additional information for the specific question index
         if st.session_state.cur_question == 5:
             st.text_area("Additional Information", """Democracy depends on elections, the rule of law, and a peaceful transition of power. On Jan 6, 2021, the transition of power was to take place, with the newly elected President, Joe Biden, to be officially confirmed as the new President. On that day, the outgoing President, Donald Trump, spoke to a rally of heavily armed supporters and implored them to go to the Capitol Building and stop the proceedings. He called his own Vice President, Mike Pence, a coward for performing his duties and confirming the new President. The crowd of supporters erected a hanging gallows and chanted for Pence to be hung.
                      """, height=160)
@@ -39,9 +41,8 @@ def ask_it():
     else:
         # Use user-provided input
         if st.session_state.text_input_value:
-            response = conversation_manager.ask_question(st.session_state.conversation,
-                                                         st.session_state.text_input_value)
-            st.text_area("OpenAI's Response:", response['reply'], height=300)
+            response = conversation_manager.ask_question(st.session_state.conversation, st.session_state.text_input_value)
+            st.text_area("OpenAI's Response:", response, height=300)
 
 
 # Load API key from environment variable
@@ -53,11 +54,11 @@ if not api_key:
 # Initialize OpenAI_Conversation
 conversation_manager = OpenAI_Conversation(api_key=api_key)
 
-questions = []
-getQuestions(questions)
+# Initialize questions
+questions = get_questions()
 
 # Streamlit App
-st.title("Election 2024: Is Voting Worth it?")
+st.title("Election 2024: Is Voting Worth It?")
 
 # Model selection
 model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
@@ -68,12 +69,6 @@ conversation_manager.set_model(selected_model)
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
-if 'generated_prompt' not in st.session_state:
-    st.session_state.generated_prompt = ""
-
-if 'instructions' not in st.session_state:
-    st.session_state.instructions = "You are a very helpful assistant."
-
 if 'text_input_value' not in st.session_state:
     st.session_state.text_input_value = ""
 
@@ -83,47 +78,19 @@ if 'cur_question' not in st.session_state:
 # Layout for predefined questions
 container = st.container()
 with container:
-    col1, col2, col3 = st.columns(3)
+    cols = st.columns(3)
+    for i, question in enumerate(questions[:6]):
+        with cols[i % 3]:
+            if st.button(question):
+                st.session_state.text_input_value = question
+                st.session_state.cur_question = i
 
-    with col1:
-        if st.button(questions[0]):
-            st.session_state.text_input_value = questions[0]
-            st.session_state.cur_question = 0
-
-    with col2:
-        if st.button(questions[1]):
-            st.session_state.text_input_value = questions[1]
-            st.session_state.cur_question = 1
-
-    with col3:
-        if st.button(questions[2]):
-            st.session_state.text_input_value = questions[2]
-            st.session_state.cur_question = 2
-
-container2 = st.container()
-with container2:
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button(questions[3]):
-            st.session_state.text_input_value = questions[3]
-            st.session_state.cur_question = 3
-
-    with col2:
-        if st.button(questions[4]):
-            st.session_state.text_input_value = questions[4]
-            st.session_state.cur_question = 4
-
-    with col3:
-        if st.button(questions[5]):
-            st.session_state.text_input_value = questions[5]
-            st.session_state.cur_question = 5
-
-user_prompt = st.text_input("Your Question:", value=st.session_state['text_input_value'], key='user_prompt')
+# User prompt input
+user_prompt = st.text_input("Your Question:", value=st.session_state.text_input_value, key='user_prompt')
 
 # Update state when text input changes
-if user_prompt != st.session_state['text_input_value']:
-    st.session_state['text_input_value'] = user_prompt
+if user_prompt != st.session_state.text_input_value:
+    st.session_state.text_input_value = user_prompt
     st.session_state.cur_question = -1
 
 # Ask button

@@ -1,7 +1,3 @@
-# simpleChatApp.py
-# This allows the user to interact with OpenAI's language model via the command line.
-# The user can input prompts and receive responses from the model or generate a list.
-
 import sys
 import os
 
@@ -48,8 +44,7 @@ while True:
     if user_choice == "1":
         # Ask a question
         user_prompt = input("Enter a prompt: ")
-        response_dict = conversation_manager.ask_question(instructions, user_prompt)
-        response = response_dict.get('reply', 'No response received.')
+        response = conversation_manager.ask_question(instructions, user_prompt)
         print("Response:\n" + response)
 
     elif user_choice == "2":
@@ -64,6 +59,7 @@ while True:
 
     elif user_choice == "3" or user_choice.lower() == "exit":
         # Exit the application
+        print("Goodbye!")
         sys.exit(0)
 
     else:

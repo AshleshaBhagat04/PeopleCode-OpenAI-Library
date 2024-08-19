@@ -23,11 +23,13 @@ for idx, model in enumerate(model_options, start=1):
 # Select model with default
 selected_model = model_options[0]
 try:
-    model_choice = int(input("Select the model to use (1-3) or press enter to use the default: ").strip())
-    if 1 <= model_choice <= len(model_options):
-        selected_model = model_options[model_choice - 1]
-    else:
-        print("Invalid choice. Using default model.")
+    model_choice = input("Select the model to use (1-3) or press enter to use the default: ").strip()
+    if model_choice:
+        model_choice = int(model_choice)
+        if 1 <= model_choice <= len(model_options):
+            selected_model = model_options[model_choice - 1]
+        else:
+            print("Invalid choice. Using default model.")
 except ValueError:
     print("Using default model.")
 
@@ -39,20 +41,21 @@ conversation = conversation_manager.get_conversation()
 
 print("How can I help you today?")
 while True:
-    user_prompt = input("Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ")
-    system_prompt = "You are a helpful assistant."
-    if user_prompt.strip().lower() == "exit":
+    system_prompt = "You are a very helpful assistant."
+    user_prompt = input("Enter a prompt or type 'generate' to create a new prompt. Type 'exit' to quit: ").strip()
+
+    if user_prompt.lower() == "exit":
         sys.exit(0)
-    elif user_prompt.strip().lower() == "generate":
-        prompt_context = input("Enter the context for generating a prompt: ")
+    elif user_prompt.lower() == "generate":
+        prompt_context = input("Enter the context for generating a prompt: ").strip()
         generated_prompts = conversation_manager.generate_sample_prompts(prompt_context, 1, 25)
         print("Generated Prompts:")
         for idx, question in enumerate(generated_prompts, start=1):
-            print(f"{idx}. {question}")
-        user_prompt = generated_prompts[0]
+            print(f"{question}")
+        user_prompt = generated_prompts[0] if generated_prompts else ""
     else:
-        system_prompt = input("Enter a potential system prompt or press enter to use the default: ")
-        if not system_prompt.strip():
+        system_prompt = input("Enter a potential system prompt or press enter to use the default: ").strip()
+        if not system_prompt:
             system_prompt = "You are a very helpful assistant."
 
     # Get response from OpenAI model
@@ -64,7 +67,8 @@ while True:
     # Display the response
     print("Response:\n" + answer)
 
-    followup_qs = conversation_manager.generate_followups(user_prompt, answer, 3, 25)
     print("Follow-up Questions:")
+    # Generate follow-up questions
+    followup_qs = conversation_manager.generate_followups(user_prompt, answer, 3, 25)
     for idx, question in enumerate(followup_qs, start=1):
         print(f"{question}")

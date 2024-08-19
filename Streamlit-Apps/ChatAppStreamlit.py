@@ -50,8 +50,9 @@ user_prompt = st.text_input("Enter your prompt:", "")
 if st.button("Ask"):
     if user_prompt:
         response = conversation_instance.ask_question(st.session_state.instructions, user_prompt)
-        st.session_state.conversation = response['conversation']
-        st.text_area("Response:", response['reply'], height=200)
+        st.session_state.conversation.append({"role": "user", "content": user_prompt})
+        st.session_state.conversation.append({"role": "assistant", "content": response})
+        st.text_area("Response:", response, height=200)
 
 # Generate prompt section
 with st.expander("Generate a Prompt"):
@@ -71,8 +72,8 @@ if st.session_state.generated_prompt:
     if st.button("Ask Generated Prompt"):
         response = conversation_instance.ask_question(st.session_state.instructions, st.session_state.generated_prompt)
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
-        st.session_state.conversation.append({"role": "assistant", "content": response['reply']})
-        st.text_area("Response:", response['reply'], height=200)
+        st.session_state.conversation.append({"role": "assistant", "content": response})
+        st.text_area("Response:", response, height=200)
         st.session_state.generated_prompt = ""
 
 # Follow-up questions section
@@ -100,8 +101,9 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
         selected_idx = int(followup_choice.split()[1]) - 1
         selected_followup = st.session_state.followup_questions[selected_idx]
         followup_response = conversation_instance.ask_question(st.session_state.instructions, selected_followup)
-        st.session_state.conversation = followup_response['conversation']
-        st.text_area("Response:", followup_response['reply'], height=200)
+        st.session_state.conversation.append({"role": "user", "content": selected_followup})
+        st.session_state.conversation.append({"role": "assistant", "content": followup_response})
+        st.text_area("Response:", followup_response, height=200)
 
 # Display conversation history
 if st.button("Show Conversation History"):

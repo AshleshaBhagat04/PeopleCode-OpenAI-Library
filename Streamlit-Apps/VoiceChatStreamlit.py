@@ -7,7 +7,7 @@ import streamlit as st
 import sys
 import os
 
-# Add parent directory to sys.path to import USFGenAI module
+# Add parent directory to sys.path to import PeopleCodeOpenAI module
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -16,7 +16,11 @@ from streamlit_mic_recorder import mic_recorder
 from PeopleCodeOpenAI import OpenAI_Conversation
 
 # Initialize OpenAI_Conversation
-api_key = os.getenv('OPENAI_API_KEY')  # Ensure your API key is set in environment variables
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    st.error("API key is not set. Please set the environment variable 'OPENAI_API_KEY'.")
+    st.stop()
+
 conversation_manager = OpenAI_Conversation(api_key=api_key)
 
 # Initialize Streamlit app
@@ -31,7 +35,7 @@ instructions = "You are a helpful assistant"
 
 
 def callback():
-    if st.session_state.my_recorder_output:
+    if st.session_state.get('my_recorder_output'):
         audio_bytes = st.session_state.my_recorder_output['bytes']
         st.audio(audio_bytes)
 
@@ -40,11 +44,15 @@ def callback():
             temp_audio_file.write(audio_bytes)
             temp_audio_file_path = temp_audio_file.name
 
-        # Call the speech_recognition function with the temporary file path
         try:
+            # Perform speech recognition
             transcribed_text = conversation_manager.speech_recognition(temp_audio_file_path)
+
+            # Get response from OpenAI model
             response = conversation_manager.ask_question(instructions, transcribed_text)
-            answer_audio = conversation_manager.text_to_speech(response['reply'])
+
+            # Convert response to speech
+            answer_audio = conversation_manager.text_to_speech(response)
             st.write("Response:")
             st.audio(answer_audio)
         finally:
@@ -52,4 +60,9 @@ def callback():
             os.remove(temp_audio_file_path)
 
 
+# Ensure 'my_recorder_output' is initialized in session state
+if 'my_recorder_output' not in st.session_state:
+    st.session_state.my_recorder_output = None
+
+# Initialize the mic recorder with a callback function
 mic_recorder(key='my_recorder', callback=callback)

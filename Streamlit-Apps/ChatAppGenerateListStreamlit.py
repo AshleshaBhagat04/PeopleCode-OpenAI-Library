@@ -2,7 +2,7 @@ import streamlit as st
 import sys
 import os
 
-# Add parent directory to sys.path to import the Assistant module
+# Add parent directory to sys.path to import the OpenAI_Conversation module
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -42,15 +42,17 @@ with tab1:
                 st.session_state.conversation = []
 
             # Set previous conversation history
-            openai_conversation._OpenAI_Conversation__prevConversation = st.session_state.conversation
+            openai_conversation.prevConversation = st.session_state.conversation
 
             response = openai_conversation.ask_question(
                 instructions="You are a helpful assistant.",
                 question=user_prompt
             )
+
             # Update the conversation history in the session state
-            st.session_state.conversation = response['conversation']
-            st.text_area("Response:", response['reply'], height=200)
+            st.session_state.conversation.append({"role": "user", "content": user_prompt})
+            st.session_state.conversation.append({"role": "assistant", "content": response})
+            st.text_area("Response:", response, height=200)
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
@@ -66,9 +68,9 @@ with tab2:
         if list_description.strip():
             try:
                 generated_list = openai_conversation.generate_list(
-                    list_description=list_description,
-                    numItems=num_items,
-                    maxWordsPerItem=max_words
+                    list_description,
+                    num_items,
+                    max_words
                 )
                 st.write("Generated List:")
                 for idx, item in enumerate(generated_list, start=1):
