@@ -21,101 +21,50 @@ if not API_KEY:
 conversation = OpenAI_Conversation(api_key=API_KEY)
 
 # Streamlit App
-st.title("AskThunkableBook")
+st.title("Drag and Drop Coding with Thunkable")
+st.subheader("Ask the Book")
 
 # Model selection
-model_options = ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
-selected_model = st.selectbox("Select the model to use:", model_options)
-conversation.set_model(selected_model)
 
-# Set default assistant ID if using specific assistant functionality
-ASSISTANT_ID = "asst_RRXmeNcR4UEj8YSrzOqWkJYa"
+conversation.set_model("gpt-4o-mini")
 
-# Initialize session state variables
-if 'conversation' not in st.session_state:
-    st.session_state.conversation = []
+# Set  assistant ID if using specific assistant functionality
 
-if 'generated_prompt' not in st.session_state:
-    st.session_state.generated_prompt = ""
+ASSISTANT_ID = "asst_LBdQmnU4xdzxRhZ822zNZk4q";
+
+if 'text_input_value' not in st.session_state:
+    st.session_state.text_input_value = ""
 
 if 'instructions' not in st.session_state:
-    st.session_state.instructions = "You are an expert Thunkable coder."
+    st.session_state.instructions = "You are an expert Thunkable coder and know the 'Drag And Drop Code with Thunkable' book as good as the author"
 
-# Instructions input
-st.session_state.instructions = st.text_area("System Prompt:", st.session_state.instructions)
+# sample prompt
+if 'q1' not in st.session_state:
+    prompts = conversation.generate_sample_prompts(st.session_state.instructions+ " Please provide some sample questions about the Thunkable book. ",2,7,ASSISTANT_ID)
+    if len(prompts)>0:
+        st.session_state.q1=prompts[0]
+    else:
+        st.session_state.q1=""
+    if len(prompts)>1:
+        st.session_state.q2=prompts[1]
+    else:
+        st.session_state.q2=""
 
+
+if st.button(st.session_state.q1):    #sample q1 clicked
+   st.session_state.text_input_value=st.session_state.q1 
+
+if st.button(st.session_state.q2):    #sample q2 clicked
+   st.session_state.text_input_value=st.session_state.q2
 # User prompt input
-user_prompt = st.text_input("Enter your prompt:", "")
+user_prompt = st.text_input("Enter a question about Thunkable coding:", st.session_state.text_input_value)
 
 # Ask button
 if st.button("Ask"):
     if user_prompt:
         response = conversation.ask_question(st.session_state.instructions, user_prompt, ASSISTANT_ID)
-        st.session_state.conversation.append({"role": "user", "content": user_prompt})
-        st.session_state.conversation.append({"role": "assistant", "content": response})
         st.text_area("Response:", response, height=200)
 
-# Generate prompt section
-with st.expander("Generate a Prompt"):
-    context = st.text_input("Enter the context for generating a prompt:", "")
-    max_words = st.number_input("Maximum number of words for the generated prompt:", min_value=1, value=25)
 
-    if st.button("Generate Prompt"):
-        if context:
-            generated_prompts = conversation.generate_sample_prompts(context, 1, max_words)
-            if generated_prompts:
-                st.session_state.generated_prompt = generated_prompts[0]
-                st.text_area("Generated Prompt:", st.session_state.generated_prompt, height=100)
 
-# Ask generated prompt button
-if st.session_state.generated_prompt:
-    st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
-    if st.button("Ask Generated Prompt"):
-        response = conversation.ask_question(st.session_state.instructions, st.session_state.generated_prompt, ASSISTANT_ID)
-        st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
-        st.session_state.conversation.append({"role": "assistant", "content": response})
-        st.text_area("Response:", response, height=200)
-        st.session_state.generated_prompt = ""
 
-# Follow-up questions section
-with st.expander("Generate Follow-up Questions"):
-    num_samples = st.number_input("Number of follow-up questions to generate:", min_value=1, value=3)
-    max_words_followups = st.number_input("Maximum number of words for follow-up questions:", min_value=1, value=25)
-
-    if st.button("Generate Follow-ups"):
-        if st.session_state.conversation:
-            latest_question = st.session_state.conversation[-2]['content'] if len(st.session_state.conversation) >= 2 else ""
-            latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = conversation.generate_followups(latest_question, latest_answer, num_samples, max_words_followups)
-            st.session_state.followup_questions = followup_questions[:num_samples]  # Limit to the requested number
-            st.write("Follow-up Questions:")
-            for idx, question in enumerate(st.session_state.followup_questions):
-                st.write(f"{idx + 1}. {question}")
-
-# Select and ask follow-up question
-if 'followup_questions' in st.session_state and st.session_state.followup_questions:
-    followup_choices = [f"Option {idx + 1}" for idx in range(len(st.session_state.followup_questions))]
-
-    if followup_choices:
-        followup_choice = st.selectbox("Select a follow-up question to ask:", followup_choices)
-
-        if st.button("Ask Follow-up"):
-            selected_idx = int(followup_choice.split()[1]) - 1
-            selected_followup = st.session_state.followup_questions[selected_idx]
-            followup_response = conversation.ask_question(st.session_state.instructions, selected_followup)
-            st.session_state.conversation.append({"role": "user", "content": selected_followup})
-            st.session_state.conversation.append({"role": "assistant", "content": followup_response})
-            st.text_area("Response:", followup_response, height=200)
-
-            # Clear follow-up questions after selection
-            st.session_state.followup_questions = []
-
-# Display conversation history
-if st.button("Show Conversation History"):
-    st.write("Conversation History:")
-    history_msgs = set()
-    for msg in st.session_state.conversation:
-        if (msg['role'], msg['content']) not in history_msgs:
-            history_msgs.add((msg['role'], msg['content']))
-            role = "User" if msg['role'] == "user" else "Assistant"
-            st.write(f"{role}: {msg['content']}")

@@ -73,7 +73,7 @@ class OpenAI_Conversation:
         Returns:
             A list of generated sample prompts.
         """
-        instructions = f"Generate {num_samples} sample prompts based on the context. Each prompt should be no more than {max_words} words."
+        instructions = f"Generate {num_samples} sample prompts based on the context. Put each generated question on a separate line with no text before or after. Each prompt should be no more than {max_words} words. "
         if assistant_id:
             return self._generate_assistant_prompts(context, instructions, assistant_id)
         else:
