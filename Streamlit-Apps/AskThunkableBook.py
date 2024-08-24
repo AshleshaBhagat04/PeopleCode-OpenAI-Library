@@ -27,6 +27,7 @@ st.subheader("Ask the Book")
 # Model selection
 
 conversation.set_model("gpt-4o-mini")
+conversation.set_temperature(.1)
 
 # Set  assistant ID if using specific assistant functionality
 
