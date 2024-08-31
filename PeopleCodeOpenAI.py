@@ -179,6 +179,8 @@ class OpenAI_Conversation:
 
     def _ask_assistant(self, instructions, question, assistant_id):
         """Handles asking a question to a specific assistant."""
+        messages = [{"role": "system", "content": instructions}] + self._prev_conversation
+        messages.append({"role": "user", "content": question})
         thread = self._client.beta.threads.create()
         self._client.beta.threads.messages.create(
             thread_id=thread.id,
@@ -194,7 +196,9 @@ class OpenAI_Conversation:
             messages = self._client.beta.threads.messages.list(thread_id=thread.id)
             for message in messages.data:
                 if message.role == "assistant":
-                    return message.content[0].text.value
+                    answer = message.content[0].text.value
+                    self._prev_conversation.append({"role": "assistant", "content": answer})
+                    return answer
         return ""
 
     def _ask_openai(self, instructions, question):
