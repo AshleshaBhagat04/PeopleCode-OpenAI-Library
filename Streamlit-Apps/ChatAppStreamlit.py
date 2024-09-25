@@ -1,7 +1,3 @@
-# ChatAppStreamlit.py
-# This creates a Streamlit application that interacts with OpenAI's language models.
-# It allows users to select a model, ask questions, generate prompts, and handle follow-up questions.
-
 import streamlit as st
 import sys
 import os
@@ -32,7 +28,7 @@ conversation_instance.set_model(selected_model)
 
 # Initialize session state variables
 if 'conversation' not in st.session_state:
-    st.session_state.conversation = []
+    st.session_state.conversation = []  # To store the entire conversation
 
 if 'generated_prompt' not in st.session_state:
     st.session_state.generated_prompt = ""
@@ -46,13 +42,30 @@ st.session_state.instructions = st.text_area("System Prompt:", st.session_state.
 # User prompt input
 user_prompt = st.text_input("Enter your prompt:", "")
 
-# Ask button
+# Handle the user prompt submission
 if st.button("Ask"):
     if user_prompt:
-        response = conversation_instance.ask_question(st.session_state.instructions, user_prompt)
+        # Append user message to conversation history
         st.session_state.conversation.append({"role": "user", "content": user_prompt})
+
+        # Build the conversation history as a single string for context
+        conversation_history = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.conversation])
+
+        # Get assistant's response using the entire conversation as context
+        response = conversation_instance.ask_question(st.session_state.instructions, conversation_history)
+
+        # Append assistant's response to conversation history
         st.session_state.conversation.append({"role": "assistant", "content": response})
+
+        # Display assistant's response
         st.text_area("Response:", response, height=200)
+
+
+# Display conversation history
+st.write("Conversation History:")
+for msg in st.session_state.conversation:
+    role = "User" if msg['role'] == "user" else "Assistant"
+    st.write(f"{role}: {msg['content']}")
 
 # Generate prompt section
 with st.expander("Generate a Prompt"):
@@ -66,15 +79,18 @@ with st.expander("Generate a Prompt"):
                 st.session_state.generated_prompt = generated_prompts[0]
                 st.text_area("Generated Prompt:", st.session_state.generated_prompt, height=100)
 
-# Ask generated prompt button
+# Handle generated prompt submission
 if st.session_state.generated_prompt:
     st.write(f"Generated Prompt: {st.session_state.generated_prompt}")
     if st.button("Ask Generated Prompt"):
         response = conversation_instance.ask_question(st.session_state.instructions, st.session_state.generated_prompt)
+
+        # Append generated prompt and response to conversation history
         st.session_state.conversation.append({"role": "user", "content": st.session_state.generated_prompt})
         st.session_state.conversation.append({"role": "assistant", "content": response})
+
         st.text_area("Response:", response, height=200)
-        st.session_state.generated_prompt = ""
+        st.session_state.generated_prompt = ""  # Clear the generated prompt after submission
 
 # Follow-up questions section
 with st.expander("Generate Follow-up Questions"):
@@ -83,9 +99,11 @@ with st.expander("Generate Follow-up Questions"):
 
     if st.button("Generate Follow-ups"):
         if st.session_state.conversation:
-            latest_question = st.session_state.conversation[-2]['content'] if len(st.session_state.conversation) >= 2 else ""
+            latest_question = st.session_state.conversation[-2]['content'] if len(
+                st.session_state.conversation) >= 2 else ""
             latest_answer = st.session_state.conversation[-1]['content'] if st.session_state.conversation else ""
-            followup_questions = conversation_instance.generate_followups(latest_question, latest_answer, num_samples, max_words_followups)
+            followup_questions = conversation_instance.generate_followups(latest_question, latest_answer, num_samples,
+                                                                          max_words_followups)
             st.session_state.followup_questions = followup_questions
             st.write("Follow-up Questions:")
             for idx, question in enumerate(followup_questions):
@@ -101,13 +119,15 @@ if 'followup_questions' in st.session_state and st.session_state.followup_questi
         selected_idx = int(followup_choice.split()[1]) - 1
         selected_followup = st.session_state.followup_questions[selected_idx]
         followup_response = conversation_instance.ask_question(st.session_state.instructions, selected_followup)
+
+        # Append follow-up question and response to conversation history
         st.session_state.conversation.append({"role": "user", "content": selected_followup})
         st.session_state.conversation.append({"role": "assistant", "content": followup_response})
+
         st.text_area("Response:", followup_response, height=200)
 
-# Display conversation history
-if st.button("Show Conversation History"):
-    st.write("Conversation History:")
-    for msg in st.session_state.conversation:
-        role = "User" if msg['role'] == "user" else "Assistant"
-        st.write(f"{role}: {msg['content']}")
+# Display conversation history again for updates
+st.write("Updated Conversation History:")
+for msg in st.session_state.conversation:
+    role = "User" if msg['role'] == "user" else "Assistant"
+    st.write(f"{role}: {msg['content']}")
