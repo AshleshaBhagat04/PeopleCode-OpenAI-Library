@@ -4,6 +4,7 @@ from openai import OpenAI
 DEFAULT_MODEL = "gpt-4"
 DEFAULT_TEMPERATURE = 0.7
 
+
 class OpenAI_Conversation:
     def __init__(self, api_key, model=DEFAULT_MODEL, assistant=None, temperature=DEFAULT_TEMPERATURE):
         """
@@ -177,10 +178,36 @@ class OpenAI_Conversation:
             )
         return translation.text
 
+    def generate_image(self, prompt):
+        """
+        Generates an image using the DALL-E model.
+
+        Args:
+            prompt: The text description of the image to generate.
+
+        Returns:
+            A list of URLs to the generated images.
+        """
+        try:
+            response = self._client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size="1024x1024",
+                quality="standard",
+                n=1
+            )
+            return [image.url for image in response.data]
+        except Exception as e:
+            print(f"Error generating image: {e}")
+            return None
+
     def _ask_assistant(self, instructions, question, assistant_id):
         """Handles asking a question to a specific assistant."""
+        # Prepare messages including previous conversation history
         messages = [{"role": "system", "content": instructions}] + self._prev_conversation
         messages.append({"role": "user", "content": question})
+
+        # Create a new thread for the assistant interaction
         thread = self._client.beta.threads.create()
         self._client.beta.threads.messages.create(
             thread_id=thread.id,
@@ -192,13 +219,18 @@ class OpenAI_Conversation:
             assistant_id=assistant_id,
             instructions=instructions
         )
+
+        # Check if the run was successful
         if run.status == 'completed':
             messages = self._client.beta.threads.messages.list(thread_id=thread.id)
+            # Process assistant's response and update conversation history
             for message in messages.data:
                 if message.role == "assistant":
                     answer = message.content[0].text.value
                     self._prev_conversation.append({"role": "assistant", "content": answer})
                     return answer
+        # If no valid response, return an empty string and append question to history
+        self._prev_conversation.append({"role": "user", "content": question})
         return ""
 
     def _ask_openai(self, instructions, question):
