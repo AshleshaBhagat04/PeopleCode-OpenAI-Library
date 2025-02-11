@@ -7,7 +7,6 @@ import os
 
 sys.path.append("..")
 from PeopleCodeOpenAI import OpenAI_Conversation
-
 # Load API key from environment variable
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
@@ -59,16 +58,16 @@ while True:
             system_prompt = "You are a very helpful assistant."
 
     # Get response from OpenAI model
-    response_dict = conversation_manager.ask_question(system_prompt, user_prompt)
+    response = conversation_manager.ask_question(system_prompt, user_prompt)
 
-    # Extract the reply from the response dictionary
-    answer = response_dict.get('reply', 'No response received.')
+    #Display the prompt asked to ChatGPT
+    print("Question asked to ChatGPT:\n")
 
     # Display the response
-    print("Response:\n" + answer)
+    print("Response:\n" + response)
 
     print("Follow-up Questions:")
     # Generate follow-up questions
-    followup_qs = conversation_manager.generate_followups(user_prompt, answer, 3, 25)
+    followup_qs = conversation_manager.generate_followups(user_prompt, response, 3, 25)
     for idx, question in enumerate(followup_qs, start=1):
         print(f"{question}")

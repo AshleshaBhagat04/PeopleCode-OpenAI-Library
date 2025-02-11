@@ -81,7 +81,12 @@ if not st.session_state.prompts:
 
 # Display initial prompts or follow-up questions
 prompts = st.session_state.followup_questions if st.session_state.latest_question else st.session_state.prompts
-choice = st.radio("Choose a question to ask:", options=prompts)
+st.write("### Choose a question to ask")
+cols = st.columns(3)
+for i, question in enumerate(prompts):
+    with cols[i % 3]:
+        if st.button(question):
+            st.session_state.user_prompt = question  # Update text input field with selected prompt
 
 # User prompt input
 input_container = st.empty()
@@ -99,7 +104,7 @@ with col2:
         st.session_state.followup_questions = []
         st.session_state.user_prompt = ""
         generate_initial_prompts()
-        st.experimental_rerun()
+        # st.experimental_rerun()
 
 
 def update_conversation(prompt):
@@ -111,14 +116,9 @@ def update_conversation(prompt):
     st.session_state.followup_questions = conversation_instance.generate_followups(
         st.session_state.latest_question, st.session_state.latest_answer, 3, 25)
     st.session_state.user_prompt = prompt
-    st.experimental_rerun()
+    # st.experimental_rerun()
 
-
-if st.button("Ask Selected Question"):
-    st.session_state.user_prompt = choice
-    update_conversation(choice)
-
-elif ask_custom and user_prompt:
+if ask_custom and user_prompt:
     st.session_state.user_prompt = user_prompt
     update_conversation(user_prompt)
 
