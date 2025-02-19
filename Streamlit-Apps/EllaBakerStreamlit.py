@@ -26,7 +26,7 @@ system_prompt = "Answer from the perspective of Ella Baker. Here is some context
 # Load API key from environment variable
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    api_key = st.secrets["OPENAI_API_KEY"]
+    api_key = st.secrets[general]["OPENAI_API_KEY"]
     if not api_key:
         st.error("API key is not set. Please set the environment variable 'OPENAI_API_KEY'.")
         st.stop()
