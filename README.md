@@ -1,3 +1,5 @@
+For in-depth tutorials, please visit: peoplecode.ai
+
 The library facilitates the development of Gen-AI software with Python code built on top of OpenAI’s API.
 
 The library takes care of tasks such as the following:
